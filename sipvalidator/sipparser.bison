@@ -1682,11 +1682,13 @@ int yyerror (char *s) {
 	  	errtoktext=yytext;
 	  	
 	  	// translate some chars into a more readable form
-	  	  switch (*errtoktext) {
+	  	  switch (*yytext) {
 	  	  case '\t': errtoktext="TAB";
 	  		     break;
-		  case '\n': errtoktext="CRLF";
+		  case '\r': if (*(yytext+1)=='\n') errtoktext="CRLF";
+		     	     else errtoktext="CR";
 			     break;
+		  case '\n': errtoktext="LF";
 		  case ' ' : errtoktext="SPACE";
 			     break;	 
 	  	  };

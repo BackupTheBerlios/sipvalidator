@@ -38,7 +38,7 @@ void updloc() {
  /* helping-rules */
 
 WSP 			([\t]|" ")
-LWS 			({WSP}*[\r\n])?{WSP}+
+LWS 			({WSP}*\r\n)?{WSP}+
 SWS 			({LWS})?
 
 HCOLON			(" "|[\t])*:{SWS}
@@ -278,8 +278,8 @@ Z	[zZ]
 {LWS}?;{LWS}? 			{ updloc(); return SEMI; }
 <nrml>{LWS}?:{LWS}? 		{ updloc(); return COLON; }
 
-<nrml,diguri>{LWS}\"			{ updloc(); return LWS_SDQUOTE; }
-<nrml,diguri>\"{LWS}			{ updloc(); return SDQUOTE_LWS; }
+<nrml,diguri>{LWS}\"		{ updloc(); return LWS_SDQUOTE; }
+<nrml,diguri>\"{LWS}		{ updloc(); return SDQUOTE_LWS; }
 
 {ALPHA} 	{ updloc(); return ALPHA; };
 {DIGIT} 	{ updloc(); return DIGIT; };
