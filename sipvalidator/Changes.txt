@@ -14,3 +14,15 @@
 - modified rules warning, digest-uri, server, user-agent (scanner-def + parser-def)
 - scanner catches now all chars - also invalid - so that there is no more any output to stdout now
   from the scanner
+
+10.09.2003
+==========
+- flex: rule STAR fixed
+- bison: fixed rules digest-uri,Content-Encoding, 
+	 warn-agent(ambiguity between hostport/pseudonym fixed),
+	 text_utf8_trim(ambiguity fixed),
+	 hier-part+authority(ambiguities fixed)
+- flex/bison:	rule rfc1123-date fixed
+		rule domain fixed
+
+
