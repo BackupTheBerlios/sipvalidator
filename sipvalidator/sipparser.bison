@@ -52,6 +52,7 @@
  #define SWITCHSTATE_SRVRVAL    BEGINB   9
  #define SWITCHSTATE_COMMENT2   BEGINB  10
  #define SWITCHSTATE_DIGURI	BEGINB  11
+ #define SWITCHSTATE_DOMAIN	BEGINB  12
  
 /* *** END OF state-managing-macros *** */
 
@@ -101,7 +102,7 @@ void initParsing();
 
 	SIP  SIP_COLON SIPS_COLON TRANSPORTE USERE METHODE TTLE MADDRE
 
-	SP HTAB CRLF SEMI LWS LWSSQR LPAREN_SV RPAREN_C2
+	SP HTAB CRLF SEMI LWS LWSSQR LPAREN_SV RPAREN_C2 COMMA_SP
 	
 	STAR SLASH EQUAL LPAREN RPAREN RAQUOT COMMA SEMI COLON
  	
@@ -194,23 +195,24 @@ Lws		:	SP
 
  /* HColon is not needed anymore cause of catching it with lexer */
  		
-text_utf8_trim	:  	text_utf8char text_utf8_trim_ch text_utf8_trim_lwsch
-		;  /* aBNF: TEXT_UTF8_TRIM  =  1*TEXT_UTF8char *(*LWS TEXT_UTF8char) */
-
-text_utf8_trim_ch:	/* empty */
-		|	text_utf8_trim_ch text_utf8char 	
+text_utf8_trim	:  	text_utf8char_plus text_utf8_trim_h
+		;  /* aBNF: TEXT_UTF8_TRIM  =  1*TEXT_UTF8char *(1*LWS TEXT_UTF8char) 
+							! changed due to ambiguity ! */
+ 
+text_utf8_trim_h: 	/* empty */
+		|	text_utf8_trim_h lws_plus text_utf8char
 		;
 
-text_utf8_trim_lwsch:	/* empty */
-		|	text_utf8_trim_lwsch text_utf8_trim_lwsch_h text_utf8char
+lws_plus	:	Lws
+		|	lws_plus Lws
 		;
-		
-text_utf8_trim_lwsch_h:	/* empty */
-		|	text_utf8_trim_lwsch_h Lws
-		;	
-	
+			
 text_utf8char	:	x21_7E
 		|	utf8_nonascii
+		;
+		
+text_utf8char_plus:	text_utf8char
+		|	text_utf8char_plus text_utf8char
 		;
 
 utf8_nonascii	:	xC0_DF UTF8_CONT
@@ -605,22 +607,25 @@ request_uri	:	sip_uri
 		;
 		
 absoluteUri	:	scheme ':' { SWITCHSTATE_START; } absoluteUri_h { SWITCHSTATE_NORMAL; }
+		;		
+		
+/* added to solve problem with domain (SPACES; Lws after RDQuot -> states) */
+absoluteUri_domain:	scheme ':' absoluteUri_h
 		;
-
+		
 absoluteUri_h	:	hier_part
 		|	opaque_part
 		;
+
+/* ! rules hier-part, authority, srvr changed to solve ambiguity-conflict ! */			
+hier_part       :       ready_path
+                |       ready_path '?' query
+                ;
+
+ready_path      :       '/' authority
+                |       '/' '/' authority
+                ;
 			
-hier_part	:	net_path
-		|	net_path '?' query
-		|	abs_path 
-		|	abs_path '?' query
-		;
-		
-net_path	:	'/' '/' authority
-		|	'/' '/' authority abs_path
-		;
-	
 abs_path	:	'/' path_segments
 		;
 
@@ -695,17 +700,26 @@ scheme_hh	:	ALPHA
 		|	'-'
 		|	'.'
 		;
-
-
+		
+/* ! rules hier-part, authority, srvr changed to solve ambiguity-conflict ! */			
 authority	:	srvr
-		|	reg_name
 		;
-		
+
 srvr		:	/* empty */
-		|	hostport
-		|	userinfo '@' hostport
+		|	reg_name
+		|	hilf_reg '@' '@' hostport
 		;
+
+hilf_reg        :       reg_name '/' hilf_reg1    /* wenn / dann 2 mal @ alle anderen Faelle ueber reg_name mgl. */
+                ;
 		
+hilf_reg1       :	/* empty */
+                |       '/'
+                |       hilf_reg
+                |       reg_name
+                ;		
+		
+				
 reg_name	:	reg_name_h 
 		|	reg_name reg_name_h
 		; /* aBNF: 1*( unreserved / escaped / "$" / "," / ";" 
@@ -960,13 +974,13 @@ username	:	USERNAME_E username_value
 username_value	:	quoted_string
 		;
 		
-digest_uri	:	URI_E { SWITCHSTATE_DIGURI; } LDquot digest_uri_value RDquot
+digest_uri	:	URI_E { SWITCHSTATE_DIGURI; } LDquot digest_uri_value RDquot { SWITCHSTATE_NORMAL; }
 		;
 		
 digest_uri_value:	rquest_uri
 		;
 
-/*  ###  Request Uri  ### */ /* evtl. to do */
+/*  ###  Request Uri  ### */
 rquest_uri     	: 	"*" 
 		| 	scheme ':' pchar_star
 		| 	abs_path
@@ -1143,7 +1157,7 @@ Content_Encoding:	CONTENT_ENCODING_HC content_coding Content_Encoding_h
 		;
 		
 Content_Encoding_h:	/* empty */
-		|	Content_Encoding Comma content_coding
+		|	Content_Encoding_h Comma content_coding
 		; /* aBNF: *(COMMA content-coding) */
 		
 Content_Language:	CONTENT_LANGUAGE_HC { SWITCHSTATE_START; } language_tag 
@@ -1220,7 +1234,7 @@ Date		:	DATE_HC { SWITCHSTATE_DATE; } sip_date { SWITCHSTATE_NORMAL; }
 sip_date	:	rfc1123_date
 		;
 
-rfc1123_date	:	wkday ',' SP date1 SP time SP GMT
+rfc1123_date	:	wkday COMMA_SP date1 SP time SP GMT
 		;
 		
 date1		:	digit2 SP month SP digit4 
@@ -1353,18 +1367,19 @@ realm		:	REALM_E realm_value
 realm_value	:	quoted_string
 		;
 		
-domain		:	DOMAIN_E LDquot uri domain_h RDquot
+domain		:	DOMAIN_E { SWITCHSTATE_DOMAIN; } LDquot uri_domain domain_h RDquot { SWITCHSTATE_NORMAL; }
 		;
 
 domain_h	:	/* empty */
-		|	domain_h domain_hh uri
+		|	domain_h domain_hh uri_domain
 		; /* aBNF: *( 1*SP uri ) */
 		
 domain_hh	:	SP	
 		|	domain_hh SP
 		; /* aBNF: 1*SP */
 		
-uri		:	absoluteUri 
+/* uri->uri_domain, changed to solve problem with domain (SPACES,Lws after RDQuot->states) */
+uri_domain		:	absoluteUri_domain
 		|	abs_path
 		;
 		
@@ -1544,9 +1559,7 @@ to_param	:	generic_param /* includes tag_param */
 Unsupported	:	UNSUPPORTED_HC option_tag comma_option_tag_star
 		;
 		
-/* to do -> see rule Server */
-User_Agent	:	USER_AGENT_HC server_val
-		|	USER_AGENT_HC server_val lws_server_val_star
+User_Agent	:	USER_AGENT_HC { SWITCHSTATE_SRVRVAL; } server_val lws_server_val_star
 		;
 		 
 Via		:	VIA_HC via_parm
@@ -1574,9 +1587,11 @@ via_params	:	via_ttl
 		;
 		
 via_ttl		:	TTL_E ttl
+		|	TTLE ttl
 		;
 		
 via_maddr	:	MADDR_E host
+		|	MADDRE host
 		;
 		
 via_received	:	RECEIVED_E IPv4address
@@ -1623,7 +1638,8 @@ warning_value	:	{ SWITCHSTATE_WARNING; } warn_code SP warn_agent SP { SWITCHSTAT
 warn_code	:	DIGIT DIGIT DIGIT
 		; /* aBNF: warn-code = 3DIGIT */
 		
-warn_agent	:	hostport
+warn_agent	:	host ':' port | IPv6reference 
+				/* rest of hostport is contained in pseudonym */
 		|	pseudonym
 		;
                      

@@ -26,12 +26,53 @@
 %{
 #include <stdio.h>
 
-/* update location-information for bison */
-void updloc() {
+ int i;
+ int lwsnl; // flag -> if true Lws contained '\n' - used in updlocLws...()
+
+/* ********************************************************************	*/  
+/* 		update location-information for bison - methods		*/
+
+ void newline() {
+    yylloc.first_line   = yylloc.last_line=yylineno;
+    yylloc.first_column = yylloc.last_column=1;
+ };
+
+ void updloc() {
 	yylloc.first_line = yylloc.last_line;
        	yylloc.first_column = yylloc.last_column;
         yylloc.last_column+=yyleng;
-};
+ };
+
+ void updlocLwsSqr() {
+ 	lwsnl=0;
+ 	for (i=0;i<yyleng;i++) {
+		if (yytext[i]=='\n') { 
+			lwsnl=1;
+			yylloc.first_line = yylloc.last_line;
+			yylloc.last_line  = yylineno;
+    			yylloc.first_column = yylloc.last_column;
+			yylloc.last_column=yyleng-i;
+		};
+	};
+	if (!lwsnl) updloc();
+ };
+
+ void updlocLws() {
+ 	lwsnl=0;
+ 	for (i=0;i<yyleng;i++) {
+		if (yytext[i]=='\n') { 
+			lwsnl=1;
+			yylloc.first_line = yylloc.last_line;
+			yylloc.last_line  = yylineno;
+    			yylloc.first_column = yylloc.last_column;
+			yylloc.last_column=yyleng-i;
+			break;
+		};
+	};
+	if (!lwsnl) updloc(); 
+ };
+ 
+/* ********************************************************************	*/
 
 %}
 
@@ -81,15 +122,15 @@ Z	[zZ]
 %option yylineno
 
  /* start-states - !!! don't change order !!! */
-%START nrml comment qstring utf8ch date sipversion rphrase warning srvrval comment2 diguri
+%START nrml comment qstring utf8ch date sipversion rphrase warning srvrval comment2 diguri domain
 
 %%
 
  /* *************************** special states ***************************** */
  /* - must come first to avoid conflicts with ALPHA,DIGIT,etc.		     */
 
-<srvrval>\(({LWS}|{WSP})?		   { updloc(); return LPAREN_SV; }
-<comment2>({LWS}|{WSP})?\)		   { updloc(); return RPAREN_C2; }
+<srvrval>\({LWS}?		   { updlocLws(); return LPAREN_SV; }
+<comment2>{LWS}?\)		   { updlocLws(); return RPAREN_C2; }
     
 <comment,comment2>[\41-\47]|[\52-\133]|[\135-\176]  { updloc(); return CTEXTH; }
 
@@ -128,7 +169,8 @@ Z	[zZ]
 <date>{S}{E}{P} { updloc(); return SEP; }
 <date>{O}{C}{T}	{ updloc(); return OCT; }
 <date>{N}{O}{V}	{ updloc(); return NOV; }
-<date>{D}{E}{C}	{ updloc(); return DEC; } 
+<date>{D}{E}{C}	{ updloc(); return DEC; }
+<date>", "     { updloc(); return COMMA_SP; } 
  
  /* ************************* end of special states *********************** */
 
@@ -144,88 +186,88 @@ Z	[zZ]
 <sipversion>{S}{I}{P} 		{ updloc(); return SIP; }
 
  /* message-header-names */
-^{A}{C}{C}{E}{P}{T}{HC}				{ updloc(); return ACCEPT_HC; }
-^{A}{C}{C}{E}{P}{T}-{E}{N}{C}{O}{D}{I}{N}{G}{HC} { updloc(); return ACCEPT_ENCODING_HC; }
-^{A}{C}{C}{E}{P}{T}-{L}{A}{N}{G}{U}{A}{G}{E}{HC} { updloc(); return ACCEPT_LANGUAGE_HC; }
-^{A}{L}{E}{R}{T}-{I}{N}{F}{O}{HC}	 	{ updloc(); return ALERT_INFO_HC; }
-^{A}{L}{L}{O}{W}{HC}  		 		{ updloc(); return ALLOW_HC; }
-^{A}{U}{T}{H}{E}{N}{T}{I}{C}{A}{T}{I}{O}{N}-{I}{N}{F}{O}{HC} { updloc(); return AUTHENTICATION_INFO_HC; }
-^{A}{U}{T}{H}{O}{R}{I}{Z}{A}{T}{I}{O}{N}{HC}	{ updloc(); return AUTHORIZATION_HC; }
-^{C}{A}{L}{L}-{I}{D}{HC}		 	{ updloc(); return CALL_ID_HC; }
-^{I}{HC}  			 		{ updloc(); return CALL_ID_HC; }
-^{C}{A}{L}{L}-{I}{N}{F}{O}{HC}	 		{ updloc(); return CALL_INFO_HC; }
-^{C}{O}{N}{T}{A}{C}{T}{HC}	 		{ updloc(); return CONTACT_HC; }
-^{M}{HC}		 			{ updloc(); return CONTACT_HC; }
-^{C}{O}{N}{T}{E}{N}{T}-{D}{I}{S}{P}{O}{S}{I}{T}{I}{O}{N}{HC} { updloc(); return CONTENT_DISPOSITION_HC; }
-^{C}{O}{N}{T}{E}{N}{T}-{E}{N}{C}{O}{D}{I}{N}{G}{HC} { updloc(); return CONTENT_ENCODING_HC; }
-^{E}{HC}  			 		{ updloc(); return CONTENT_ENCODING_HC; }
-^{C}{O}{N}{T}{E}{N}{T}-{L}{A}{N}{G}{U}{A}{G}{E}{HC} { updloc(); return CONTENT_LANGUAGE_HC; }
-^{C}{O}{N}{T}{E}{N}{T}-{L}{E}{N}{G}{T}{H}{HC} 	{ updloc(); return CONTENT_LENGTH_HC; }
-^{L}{HC}  			 		{ updloc(); return CONTENT_LENGTH_HC; }
-^{C}{O}{N}{T}{E}{N}{T}-{T}{Y}{P}{E}{HC} 	{ updloc(); return CONTENT_TYPE_HC; }
-^{C}{HC}			 		{ updloc(); return CONTENT_TYPE_HC; }
-^{C}{S}{E}{Q}{HC}			 	{ updloc(); return CSEQ_HC; }
-^{D}{A}{T}{E}{HC}			 	{ updloc(); return DATE_HC; }
-^{E}{R}{R}{O}{R}-{I}{N}{F}{O}{HC}	 	{ updloc(); return ERROR_INFO_HC; }
-^{E}{X}{P}{I}{R}{E}{S}{HC} 		 	{ updloc(); return EXPIRES_HC; }
-^{F}{R}{O}{M}{HCOLON}	 	 		{ updloc(); return FROM_HC; }
-^{F}{HC}		 			{ updloc(); return FROM_HC; }
-^{I}{N}-{R}{E}{P}{L}{Y}-{T}{O}{HC}  		{ updloc(); return IN_REPLY_TO_HC; }
-^{M}{A}{X}-{F}{O}{R}{W}{A}{R}{D}{S}{HC}	  	{ updloc(); return MAX_FORWARDS_HC; }
-^{M}{I}{M}{E}-{V}{E}{R}{S}{I}{O}{N}{HC}  	{ updloc(); return MIME_VERSION_HC; }
-^{M}{I}{N}-{E}{X}{P}{I}{R}{E}{S}{HC} 		{ updloc(); return MIN_EXPIRES_HC; }
-^{O}{R}{G}{A}{N}{I}{Z}{A}{T}{I}{O}{N}{HC}	{ updloc(); return ORGANIZATION_HC; }
-^{P}{R}{I}{O}{R}{I}{T}{Y}{HC}  		 	{ updloc(); return PRIORITY_HC; }
-^{P}{R}{O}{X}{Y}-{A}{U}{T}{H}{E}{N}{T}{I}{C}{A}{T}{E}{HC} { updloc(); return PROXY_AUTHENTICATE_HC; }
-^{P}{R}{O}{X}{Y}-{A}{U}{T}{H}{O}{R}{I}{Z}{A}{T}{I}{O}{N}{HC} { updloc(); return PROXY_AUTHORIZATION_HC; }
-^{P}{R}{O}{X}{Y}-{R}{E}{Q}{U}{I}{R}{E}{HC}	{ updloc(); return PROXY_REQUIRE_HC; }
-^{R}{E}{C}{O}{R}{D}-{R}{O}{U}{T}{E}{HC} 	{ updloc(); return RECORD_ROUTE_HC; }
-^{R}{E}{P}{L}{Y}-{T}{O}{HC}	 		{ updloc(); return REPLY_TO_HC; }
-^{R}{E}{Q}{U}{I}{R}{E}{HC}  		 	{ updloc(); return REQUIRE_HC; }
-^{R}{E}{T}{R}{Y}-{A}{F}{T}{E}{R}{HC}  		{ updloc(); return RETRY_AFTER_HC; }
-^{R}{O}{U}{T}{E}{HC} 		 		{ updloc(); return ROUTE_HC; }
-^{S}{E}{R}{V}{E}{R}{HC}		 		{ updloc(); return SERVER_HC; }
-^{S}{U}{B}{J}{E}{C}{T}{HC} 		 	{ updloc(); return SUBJECT_HC; }
-^{S}{HC}  			 		{ updloc(); return SUBJECT_HC; }
-^{S}{U}{P}{P}{O}{R}{T}{E}{D}{HC}  		{ updloc(); return SUPPORTED_HC; }
-^{K}{HC}  			 		{ updloc(); return SUPPORTED_HC; }
-^{T}{I}{M}{E}{S}{T}{A}{M}{P}{HC}  		{ updloc(); return TIMESTAMP_HC; }
-^{T}{O}{HC}  		 			{ updloc(); return TO_HC; }
-^{T}{HC}  		 			{ updloc(); return TO_HC; }
-^{U}{N}{S}{U}{P}{P}{O}{R}{T}{E}{D}{HC}  	{ updloc(); return UNSUPPORTED_HC; }
-^{U}{S}{E}{R}-{A}{G}{E}{N}{T}{HC}	 	{ updloc(); return USER_AGENT_HC; }
-^{V}{I}{A}{HC}  			 	{ updloc(); return VIA_HC; }
-^{V}{HC}  			 		{ updloc(); return VIA_HC; }
-^{W}{A}{R}{N}{I}{N}{G}{HC}  		 	{ updloc(); return WARNING_HC; }
-^{W}{W}{W}-{A}{U}{T}{H}{E}{N}{T}{I}{C}{A}{T}{E}{HC} { updloc(); return WWW_AUTHENTICATE_HC; }
-^({ALPHA}|{DIGIT})+{HC}				{ updloc(); return HEADER_NAME_HC; }
+^{A}{C}{C}{E}{P}{T}{HC}				{ updlocLws(); return ACCEPT_HC; }
+^{A}{C}{C}{E}{P}{T}-{E}{N}{C}{O}{D}{I}{N}{G}{HC} { updlocLws(); return ACCEPT_ENCODING_HC; }
+^{A}{C}{C}{E}{P}{T}-{L}{A}{N}{G}{U}{A}{G}{E}{HC} { updlocLws(); return ACCEPT_LANGUAGE_HC; }
+^{A}{L}{E}{R}{T}-{I}{N}{F}{O}{HC}	 	{ updlocLws(); return ALERT_INFO_HC; }
+^{A}{L}{L}{O}{W}{HC}  		 		{ updlocLws(); return ALLOW_HC; }
+^{A}{U}{T}{H}{E}{N}{T}{I}{C}{A}{T}{I}{O}{N}-{I}{N}{F}{O}{HC} { updlocLws(); return AUTHENTICATION_INFO_HC; }
+^{A}{U}{T}{H}{O}{R}{I}{Z}{A}{T}{I}{O}{N}{HC}	{ updlocLws(); return AUTHORIZATION_HC; }
+^{C}{A}{L}{L}-{I}{D}{HC}		 	{ updlocLws(); return CALL_ID_HC; }
+^{I}{HC}  			 		{ updlocLws(); return CALL_ID_HC; }
+^{C}{A}{L}{L}-{I}{N}{F}{O}{HC}	 		{ updlocLws(); return CALL_INFO_HC; }
+^{C}{O}{N}{T}{A}{C}{T}{HC}	 		{ updlocLws(); return CONTACT_HC; }
+^{M}{HC}		 			{ updlocLws(); return CONTACT_HC; }
+^{C}{O}{N}{T}{E}{N}{T}-{D}{I}{S}{P}{O}{S}{I}{T}{I}{O}{N}{HC} { updlocLws(); return CONTENT_DISPOSITION_HC; }
+^{C}{O}{N}{T}{E}{N}{T}-{E}{N}{C}{O}{D}{I}{N}{G}{HC} { updlocLws(); return CONTENT_ENCODING_HC; }
+^{E}{HC}  			 		{ updlocLws(); return CONTENT_ENCODING_HC; }
+^{C}{O}{N}{T}{E}{N}{T}-{L}{A}{N}{G}{U}{A}{G}{E}{HC} { updlocLws(); return CONTENT_LANGUAGE_HC; }
+^{C}{O}{N}{T}{E}{N}{T}-{L}{E}{N}{G}{T}{H}{HC} 	{ updlocLws(); return CONTENT_LENGTH_HC; }
+^{L}{HC}  			 		{ updlocLws(); return CONTENT_LENGTH_HC; }
+^{C}{O}{N}{T}{E}{N}{T}-{T}{Y}{P}{E}{HC} 	{ updlocLws(); return CONTENT_TYPE_HC; }
+^{C}{HC}			 		{ updlocLws(); return CONTENT_TYPE_HC; }
+^{C}{S}{E}{Q}{HC}			 	{ updlocLws(); return CSEQ_HC; }
+^{D}{A}{T}{E}{HC}			 	{ updlocLws(); return DATE_HC; }
+^{E}{R}{R}{O}{R}-{I}{N}{F}{O}{HC}	 	{ updlocLws(); return ERROR_INFO_HC; }
+^{E}{X}{P}{I}{R}{E}{S}{HC} 		 	{ updlocLws(); return EXPIRES_HC; }
+^{F}{R}{O}{M}{HCOLON}	 	 		{ updlocLws(); return FROM_HC; }
+^{F}{HC}		 			{ updlocLws(); return FROM_HC; }
+^{I}{N}-{R}{E}{P}{L}{Y}-{T}{O}{HC}  		{ updlocLws(); return IN_REPLY_TO_HC; }
+^{M}{A}{X}-{F}{O}{R}{W}{A}{R}{D}{S}{HC}	  	{ updlocLws(); return MAX_FORWARDS_HC; }
+^{M}{I}{M}{E}-{V}{E}{R}{S}{I}{O}{N}{HC}  	{ updlocLws(); return MIME_VERSION_HC; }
+^{M}{I}{N}-{E}{X}{P}{I}{R}{E}{S}{HC} 		{ updlocLws(); return MIN_EXPIRES_HC; }
+^{O}{R}{G}{A}{N}{I}{Z}{A}{T}{I}{O}{N}{HC}	{ updlocLws(); return ORGANIZATION_HC; }
+^{P}{R}{I}{O}{R}{I}{T}{Y}{HC}  		 	{ updlocLws(); return PRIORITY_HC; }
+^{P}{R}{O}{X}{Y}-{A}{U}{T}{H}{E}{N}{T}{I}{C}{A}{T}{E}{HC} { updlocLws(); return PROXY_AUTHENTICATE_HC; }
+^{P}{R}{O}{X}{Y}-{A}{U}{T}{H}{O}{R}{I}{Z}{A}{T}{I}{O}{N}{HC} { updlocLws(); return PROXY_AUTHORIZATION_HC; }
+^{P}{R}{O}{X}{Y}-{R}{E}{Q}{U}{I}{R}{E}{HC}	{ updlocLws(); return PROXY_REQUIRE_HC; }
+^{R}{E}{C}{O}{R}{D}-{R}{O}{U}{T}{E}{HC} 	{ updlocLws(); return RECORD_ROUTE_HC; }
+^{R}{E}{P}{L}{Y}-{T}{O}{HC}	 		{ updlocLws(); return REPLY_TO_HC; }
+^{R}{E}{Q}{U}{I}{R}{E}{HC}  		 	{ updlocLws(); return REQUIRE_HC; }
+^{R}{E}{T}{R}{Y}-{A}{F}{T}{E}{R}{HC}  		{ updlocLws(); return RETRY_AFTER_HC; }
+^{R}{O}{U}{T}{E}{HC} 		 		{ updlocLws(); return ROUTE_HC; }
+^{S}{E}{R}{V}{E}{R}{HC}		 		{ updlocLws(); return SERVER_HC; }
+^{S}{U}{B}{J}{E}{C}{T}{HC} 		 	{ updlocLws(); return SUBJECT_HC; }
+^{S}{HC}  			 		{ updlocLws(); return SUBJECT_HC; }
+^{S}{U}{P}{P}{O}{R}{T}{E}{D}{HC}  		{ updlocLws(); return SUPPORTED_HC; }
+^{K}{HC}  			 		{ updlocLws(); return SUPPORTED_HC; }
+^{T}{I}{M}{E}{S}{T}{A}{M}{P}{HC}  		{ updlocLws(); return TIMESTAMP_HC; }
+^{T}{O}{HC}  		 			{ updlocLws(); return TO_HC; }
+^{T}{HC}  		 			{ updlocLws(); return TO_HC; }
+^{U}{N}{S}{U}{P}{P}{O}{R}{T}{E}{D}{HC}  	{ updlocLws(); return UNSUPPORTED_HC; }
+^{U}{S}{E}{R}-{A}{G}{E}{N}{T}{HC}	 	{ updlocLws(); return USER_AGENT_HC; }
+^{V}{I}{A}{HC}  			 	{ updlocLws(); return VIA_HC; }
+^{V}{HC}  			 		{ updlocLws(); return VIA_HC; }
+^{W}{A}{R}{N}{I}{N}{G}{HC}  		 	{ updlocLws(); return WARNING_HC; }
+^{W}{W}{W}-{A}{U}{T}{H}{E}{N}{T}{I}{C}{A}{T}{E}{HC} { updlocLws(); return WWW_AUTHENTICATE_HC; }
+^({ALPHA}|{DIGIT})+{HC}				{ updlocLws(); return HEADER_NAME_HC; }
 
 
-<nrml>{D}{I}{G}{E}{S}{T}{LWS}  	    		{ updloc(); return DIGEST_LWS; }
+<nrml>{D}{I}{G}{E}{S}{T}{LWS}  	    		{ updlocLws(); return DIGEST_LWS; }
 
-<nrml>{D}{U}{R}{A}{T}{I}{O}{N}{SWS}={SWS}   	{ updloc(); return DURATION_E; }
-<nrml>{U}{S}{E}{R}{N}{A}{M}{E}{SWS}={SWS}   	{ updloc(); return USERNAME_E; }
-<nrml>{U}{R}{I}{SWS}={SWS}	    		{ updloc(); return URI_E; }
-<nrml>{H}{A}{N}{D}{L}{I}{N}{G}{SWS}={SWS}   	{ updloc(); return HANDLING_E; } 
-<nrml>{P}{U}{R}{P}{O}{S}{E}{SWS}={SWS}    	{ updloc(); return PURPOSE_E; }
-<nrml>{N}{E}{X}{T}{N}{O}{N}{C}{E}{SWS}={SWS}  	{ updloc(); return NEXTNONCE_E; }
-<nrml>{R}{S}{P}{A}{U}{T}{H}{SWS}={SWS}    	{ updloc(); return RSPAUTH_E; }
-<nrml>{R}{E}{S}{P}{O}{N}{S}{E}{SWS}={SWS}   	{ updloc(); return RESPONSE_E; }
-<nrml>{C}{N}{O}{N}{C}{E}{SWS}={SWS}	    	{ updloc(); return CNONCE_E; }
-<nrml>{N}{C}{SWS}={SWS}	    			{ updloc(); return NC_E; }
-<nrml>{Q}{O}{P}{SWS}={SWS} 	    		{ updloc(); return QOP_E; }
-<nrml>{R}{E}{A}{L}{M}{SWS}={SWS} 	    	{ updloc(); return REALM_E; }
-<nrml>{D}{O}{M}{A}{I}{N}{SWS}={SWS}     	{ updloc(); return DOMAIN_E; }
-<nrml>{N}{O}{N}{C}{E}{SWS}={SWS} 	    	{ updloc(); return NONCE_E; }
-<nrml>{O}{P}{A}{Q}{U}{E}{SWS}={SWS}     	{ updloc(); return OPAQUE_E; }
-<nrml>{S}{T}{A}{L}{E}{SWS}={SWS}{F}{A}{L}{S}{E} { updloc(); return STALE_E_TRUE; }
-<nrml>{S}{T}{A}{L}{E}{SWS}={SWS}{T}{R}{U}{E}  	{ updloc(); return STALE_E_FALSE; }
+<nrml>{D}{U}{R}{A}{T}{I}{O}{N}{SWS}={SWS}   	{ updlocLwsSqr(); return DURATION_E; }
+<nrml>{U}{S}{E}{R}{N}{A}{M}{E}{SWS}={SWS}   	{ updlocLwsSqr(); return USERNAME_E; }
+<nrml>{U}{R}{I}{SWS}={SWS}	    		{ updlocLwsSqr(); return URI_E; }
+<nrml>{H}{A}{N}{D}{L}{I}{N}{G}{SWS}={SWS}   	{ updlocLwsSqr(); return HANDLING_E; } 
+<nrml>{P}{U}{R}{P}{O}{S}{E}{SWS}={SWS}    	{ updlocLwsSqr(); return PURPOSE_E; }
+<nrml>{N}{E}{X}{T}{N}{O}{N}{C}{E}{SWS}={SWS}  	{ updlocLwsSqr(); return NEXTNONCE_E; }
+<nrml>{R}{S}{P}{A}{U}{T}{H}{SWS}={SWS}    	{ updlocLwsSqr(); return RSPAUTH_E; }
+<nrml>{R}{E}{S}{P}{O}{N}{S}{E}{SWS}={SWS}   	{ updlocLwsSqr(); return RESPONSE_E; }
+<nrml>{C}{N}{O}{N}{C}{E}{SWS}={SWS}	    	{ updlocLwsSqr(); return CNONCE_E; }
+<nrml>{N}{C}{SWS}={SWS}	    			{ updlocLwsSqr(); return NC_E; }
+<nrml>{Q}{O}{P}{SWS}={SWS} 	    		{ updlocLwsSqr(); return QOP_E; }
+<nrml>{R}{E}{A}{L}{M}{SWS}={SWS} 	    	{ updlocLwsSqr(); return REALM_E; }
+<nrml>{D}{O}{M}{A}{I}{N}{SWS}={SWS}     	{ updlocLwsSqr(); return DOMAIN_E; }
+<nrml>{N}{O}{N}{C}{E}{SWS}={SWS} 	    	{ updlocLwsSqr(); return NONCE_E; }
+<nrml>{O}{P}{A}{Q}{U}{E}{SWS}={SWS}     	{ updlocLwsSqr(); return OPAQUE_E; }
+<nrml>{S}{T}{A}{L}{E}{SWS}={SWS}{F}{A}{L}{S}{E} { updlocLwsSqr(); return STALE_E_TRUE; }
+<nrml>{S}{T}{A}{L}{E}{SWS}={SWS}{T}{R}{U}{E}  	{ updlocLwsSqr(); return STALE_E_FALSE; }
 
-<nrml>{A}{L}{G}{O}{R}{I}{T}{H}{M}{SWS}={SWS}  	{ updloc(); return ALGORITHM_E; }
-<nrml>{T}{T}{L}{SWS}={SWS} 	    		{ updloc(); return TTL_E; }
-<nrml>{M}{A}{D}{D}{R}{SWS}={SWS}      		{ updloc(); return MADDR_E; }
-<nrml>{R}{E}{C}{E}{I}{V}{E}{D}{SWS}={SWS}  	{ updloc(); return RECEIVED_E; }
-<nrml>{B}{R}{A}{N}{C}{H}{SWS}={SWS}	    	{ updloc(); return BRANCH_E; }
+<nrml>{A}{L}{G}{O}{R}{I}{T}{H}{M}{SWS}={SWS}  	{ updlocLwsSqr(); return ALGORITHM_E; }
+<nrml>{T}{T}{L}{SWS}={SWS} 	    		{ updlocLwsSqr(); return TTL_E; }
+<nrml>{M}{A}{D}{D}{R}{SWS}={SWS}      		{ updlocLwsSqr(); return MADDR_E; }
+<nrml>{R}{E}{C}{E}{I}{V}{E}{D}{SWS}={SWS}  	{ updlocLwsSqr(); return RECEIVED_E; }
+<nrml>{B}{R}{A}{N}{C}{H}{SWS}={SWS}	    	{ updlocLwsSqr(); return BRANCH_E; }
 
 
  /* literals */
@@ -263,31 +305,30 @@ Z	[zZ]
 \"   		{ updloc(); return SDQUOTE; }
 " "  		{ updloc(); return SP; } 
 [\t] 		{ updloc(); return HTAB; }
-<nrml,srvrval>{LWS}	{ updloc(); return LWS; }
+<nrml,srvrval>{LWS}	{ updlocLws(); return LWS; }
 
 
  /* for fixing lws-ambiguity-problem */
-<nrml>{LWS}{LWS}		{ updloc(); return LWSSQR; }
-<nrml>>{LWS}			{ updloc(); return RAQUOT; };
-<nrml>{LWS}?*{LWS}? 		{ updloc(); return STAR; }
-<nrml,srvrval>{LWS}?\/{LWS}? 	{ updloc(); return SLASH; }
-<nrml>{LWS}?={LWS}? 		{ updloc(); return EQUAL; }
-<nrml,comment>{LWS}?\({LWS}? 	{ updloc(); return LPAREN; }
-<nrml,comment>{LWS}?\){LWS}? 	{ updloc(); return RPAREN; }
-{LWS}?,{LWS}? 			{ updloc(); return COMMA; }
-{LWS}?;{LWS}? 			{ updloc(); return SEMI; }
-<nrml>{LWS}?:{LWS}? 		{ updloc(); return COLON; }
+<nrml>{LWS}{LWS}		{ updlocLwsSqr(); return LWSSQR; }
+<nrml>\>{LWS}			{ updlocLws(); return RAQUOT; };
+<nrml>{LWS}?\*{LWS}? 		{ updlocLwsSqr(); return STAR; }
+<nrml,srvrval>{LWS}?\/{LWS}? 	{ updlocLwsSqr(); return SLASH; }
+<nrml>{LWS}?\={LWS}? 		{ updlocLwsSqr(); return EQUAL; }
+<nrml,comment>{LWS}?\({LWS}? 	{ updlocLwsSqr(); return LPAREN; }
+<nrml,comment>{LWS}?\){LWS}? 	{ updlocLwsSqr(); return RPAREN; }
+{LWS}?\,{LWS}? 			{ updlocLwsSqr(); return COMMA; }
+{LWS}?\;{LWS}? 			{ updlocLwsSqr(); return SEMI; }
+<nrml>{LWS}?\:{LWS}? 		{ updlocLwsSqr(); return COLON; }
 
-<nrml,diguri>{LWS}\"		{ updloc(); return LWS_SDQUOTE; }
-<nrml,diguri>\"{LWS}		{ updloc(); return SDQUOTE_LWS; }
+<nrml,diguri,domain>{LWS}\"		{ updlocLws(); return LWS_SDQUOTE; }
+<nrml,diguri,domain>\"{LWS}		{ updlocLws(); return SDQUOTE_LWS; }
 
 {ALPHA} 	{ updloc(); return ALPHA; };
 {DIGIT} 	{ updloc(); return DIGIT; };
 
 \r\n {
   // location-update
-    yylloc.first_line   = yylloc.last_line=yylineno;
-    yylloc.first_column = yylloc.last_column=1;
+    newline();
   return CRLF;
 }
 
