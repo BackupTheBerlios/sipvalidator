@@ -41,6 +41,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "LoggerModul.h"
+#include "sipsniff.h"
 
 /* syntax-error-stuff */ 
  extern char *synerrbufp;
@@ -48,13 +49,18 @@
  
 /* usage-message of sipvalidator */
  void printUsage();
-  
-main(int argc, char *args[]) {
+
+/* extern procedures */
+ extern void initParsing();
+ extern void CheckContentLength(char* sipp,int siplen);
+ extern char getopt(int argc, char *args[], char *mask);
+   
+int main(int argc, char *args[]) {
 
 	/* initialization */
 	  char ch;	
 	  extern char *optarg;
-    	  extern int optind, optopt,opterr;
+    	  extern int optopt,opterr;
 	
 	  unsigned char BISONDEBUGMODE;
 	  unsigned char MSGFRMFILE;
@@ -68,9 +74,7 @@ main(int argc, char *args[]) {
 	  int logvlevel;
           char* fileBufferp;
           int ctr;
-	  int cl;
-	  int i;
-
+	  
 	  int temp;
 	  FILE *file;
 
@@ -208,7 +212,7 @@ main(int argc, char *args[]) {
 			  temp=0;
 			  ch=getc(file);
 			  if (ch=='\n') ctr++;
-                          while(ch!=EOF){
+                          while(ch!=EOF) {
 				if (ch=='\r') temp=1;
                                 ch=getc(file);
                                 ctr++;
@@ -217,7 +221,8 @@ main(int argc, char *args[]) {
                           };
                         
 			// alloc mem and copy file to it (with adding '\r' if needed)
-			if (fileBufferp=(char*)malloc(ctr)) {
+			fileBufferp=(char*)malloc(ctr);
+			if (fileBufferp!=NULL) {
 
                           rewind(file);
 

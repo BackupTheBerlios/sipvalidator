@@ -1,5 +1,5 @@
 /* This file is part of SIP-Validator.
-   Copyright (C) 2003  Philippe Gérard, Mario Schulz
+   Copyright (C) 2003  Philippe Gerard, Mario Schulz
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -43,7 +43,9 @@ pcap_t *pcap_handle;
 
 /* prepare Parser */
  extern int initParsing();
-
+ 
+ extern void CheckContentLength(char* sipp,int siplen);
+ 
 /* pcap-callback-procedure */
 void pcap_callback(u_char *buffer, const struct pcap_pkthdr* pkthdr, const u_char* packet) {
  
@@ -146,7 +148,6 @@ int sipsniff(char* device, int port, int nummsgs) {
 
 	/* initialisations */
 	  char 		pcaperrbuf[PCAP_ERRBUF_SIZE]; // error-buffer for pcab-messages
-	  int		res;
 	
 	  extern pcap_t	*pcap_handle;
 	  bpf_u_int32 	net;  // IP

@@ -45,3 +45,11 @@
 ==========
 - added check if Content-Length given in SIP-Message-Header is the right value
 - fixed problem with */STAR (occured in rule Accept, (rule Star only used in rule Contact))
+
+01.11.2003
+==========
+- problem with messages with LF instead of CRLF as EOL fixed
+
+05.11.2003
+==========
+- ambiguity error between from_param and uri_parameters fixed
