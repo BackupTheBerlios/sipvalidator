@@ -364,7 +364,7 @@ quoted_string_hh:	/* empty */
 qdtext		:	Lws
 		|	QDTEXTH	/* %x21 / %x23-5B / %x5D-7E */
 		|	utf8_nonascii
-		;		
+		;
 
 sip_uri		:	SIP_COLON { SWITCHSTATE_START; } sip_uri_h { SWITCHSTATE_NORMAL; }
 		; /* aBNF: SIP-URI = "sip:" [ userinfo ] hostport uri-parameters [ headers ] */
@@ -373,8 +373,8 @@ sip_uri_h       :  	hostport uri_parameters
 		|	userinfo hostport uri_parameters
 		|	hostport uri_parameters headers
 		|	userinfo hostport uri_parameters headers
-		; 
-		 
+		;
+
 sips_uri	:	SIPS_COLON { SWITCHSTATE_START; } sips_uri_h { SWITCHSTATE_NORMAL; }
 		; /* aBNF: SIP-URI = "sips:" [ userinfo ] hostport uri-parameters [ headers ] */
 
@@ -382,7 +382,7 @@ sips_uri_h	:  	hostport uri_parameters
 		|	userinfo hostport uri_parameters
 		|	hostport uri_parameters headers
 		|	userinfo hostport uri_parameters headers
-		; 
+		;
 
 userinfo        :	user '@'
 		|	user ':' password '@'
@@ -425,7 +425,7 @@ password_h	:	unreserved
 		|	'$'
 		|	','
 		;
-                    	     
+
 hostport	:	host
 		|	host ':' port 
 		;
@@ -581,7 +581,7 @@ hvalue_h	:	hnv_unreserved
 		|	unreserved
 		|	escaped
 		;
-			
+
 hnv_unreserved	:	'['
 		|	']'
 		|	'/'
@@ -854,7 +854,7 @@ accept_param	:	generic_param // evtl. semantikcheck "q" EQUAL qvalue
 		;
 
 /* qvalue = ( "0" [ "." 0*3DIGIT ] ) / ( "1" [ "." 0*3("0") ] ) <-- obsolete */
-				
+
 generic_param 	:  	token
 		|	token Equal gen_value
 		;
@@ -1010,7 +1010,7 @@ dresponse	:	RESPONSE_E request_digest
 		
 request_digest	:	LDquot request_digest_h RDquot
 		; /* aBNF: LDQUOT 32LHEX RDQUOT */
-		
+
 request_digest_h:	request_digest_hh request_digest_hh request_digest_hh request_digest_hh
 		;
 		
@@ -1078,7 +1078,7 @@ Call_Info_h	:	/* empty */
 		
 info		:	Laquot absoluteUri Raquot info_h 
 		;
-		
+
 info_h		:	/* empty */
 		|	info_h Semi info_param
 		; /* aBNF: *( SEMI info-param) */
@@ -1156,7 +1156,7 @@ handling_param	:	HANDLING_E token
 		
 /* disp_extension_token = token <-- obsolete */
 		;
-		
+
 Content_Encoding:	CONTENT_ENCODING_HC content_coding Content_Encoding_h
 		;
 		
@@ -1178,7 +1178,7 @@ language_tag	:	primary_tag language_tag_h
 language_tag_h	:	/* empty */
 		|	language_tag_h '-' subtag
 		; /* aBNF: *( "-" subtag ) */
-		
+
 primary_tag	:	alpha1_8
 		;
 		
@@ -1205,7 +1205,7 @@ m_type		: token /* s.b. */
 /* composite-type = "message" / "multipart" / extension-token *
 
 /* discrete_type, composite_type obsolete -> merged */
-		
+
 extension_token	:	token /* <-- ietf_token, x_token */
 		;
 		
@@ -1234,7 +1234,7 @@ CSeq		:	CSEQ_HC number Lws method
 		
 Date		:	DATE_HC { SWITCHSTATE_DATE; } sip_date { SWITCHSTATE_NORMAL; }
 		;
-		
+
 sip_date	:	rfc1123_date
 		;
 
@@ -1307,7 +1307,7 @@ from_spec_h	:	/* empty */
 from_param	:	generic_param /* includes tag_param */
 		;
 
-/* tag_param	:	TAG_E token; <-- obsolete */	
+/* tag_param	:	TAG_E token; <-- obsolete */
 
 In_Reply_To	:	IN_REPLY_TO_HC callid In_Reply_To_h
 		;
@@ -1351,7 +1351,7 @@ challenge	:	DIGEST_LWS digest_cln challenge_h
 challenge_h	:	/* empty */
 		|	challenge_h Comma digest_cln
 		; /* aBNF: *(COMMA digest-cln) */
-		
+
 other_challenge	:	auth_scheme Lws auth_param comma_auth_param_star
 		;
 		
@@ -1400,7 +1400,7 @@ stale		:	STALE_E_TRUE
 		|	STALE_E_FALSE
 		;
 
-algorithm	:	ALGORITHM_E token 
+algorithm	:	ALGORITHM_E token
 		; /* aBNF: "md5" | "md5_sess" | token */
 		
 qop_options	:	QOP_E LDquot qop_value qop_options_h RDquot
@@ -1459,7 +1459,7 @@ rplyto_param	:	generic_param
 		
 Require		:	REQUIRE_HC option_tag comma_option_tag_star
 		;
-		
+
 Retry_After	:	RETRY_AFTER_HC delta_seconds Retry_After_h
 		|	RETRY_AFTER_HC delta_seconds comment Retry_After_h
 		;
@@ -1550,21 +1550,42 @@ delay		:	/* empty */
 		
 
 /* to do -> original-regel fuer to auskommentiert und durch extension-header-regel ersetzt,
-   da amibiguity-error momentan noch nicht geloest */
+   da amibiguity-error momentan noch nicht geloest
 To		:	TO_HC { SWITCHSTATE_UTF8CH; } header_value { SWITCHSTATE_NORMAL; }
 		;
-/*
+                */
+
 To		:	TO_HC name_addr To_h
-		|	TO_HC addr_spec To_h
+		|	TO_HC addr_spec2 To_h
             	;
-            	
-To_h		:	// empty  
+
+addr_spec2	:	sip_uri2
+		|	sips_uri2
+		|	absoluteUri
+		;
+
+sip_uri2		:	SIP_COLON { SWITCHSTATE_START; } sip_uri_h2 { SWITCHSTATE_NORMAL; }
+		; /* aBNF: SIP-URI = "sip:" [ userinfo ] hostport uri-parameters [ headers ] */
+
+sip_uri_h2      :  	hostport
+		|	userinfo hostport
+		;
+
+sips_uri2	:	SIPS_COLON { SWITCHSTATE_START; } sips_uri_h2 { SWITCHSTATE_NORMAL; }
+		; /* aBNF: SIP-URI = "sips:" [ userinfo ] hostport uri-parameters [ headers ] */
+
+sips_uri_h2	:  	hostport
+		|	userinfo hostport
+		;
+
+
+To_h		:	// empty
 		|	To_h Semi to_param
 		; // aBNF: *( SEMI to-param )
-             
+
 to_param	:	generic_param // includes tag_param
 		;
-*/
+
 				
 Unsupported	:	UNSUPPORTED_HC option_tag comma_option_tag_star
 		;
@@ -1579,7 +1600,7 @@ Via		:	VIA_HC via_parm
 Via_h		:	Comma via_parm
 		|	Via_h Comma via_parm
 		; /* aBNF: 1*(COMMA via-parm) */ 
-		
+
 via_parm	:	sent_protocol Lws sent_by
 		|	sent_protocol Lws sent_by via_parm_h
 		;
