@@ -1,5 +1,5 @@
 /* This file is part of SIP-Validator.
-   Copyright (C) 2003  Philippe Gèrard, Mario Schulz
+   Copyright (C) 2003  Philippe GÃ©rard, Mario Schulz
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -30,9 +30,11 @@
  *  -o logopts   -- loglevel [default: 0]
  *
  *  -h           -- this message
- *  -b           -- Bison-Debug-Mode (for development)
- *  -r parsefile -- parse SIP-Message from "parsefile" (for development)
- *
+ *     
+ *  Info about loglevel:
+ *	0 - only timestamp
+ *      1 - + syntaxerror-messages
+ *      2 - + SIP-message-header
 **/
 
 #include <stdio.h>
@@ -133,7 +135,7 @@ main(int argc, char *args[]) {
             		break;	
             	case 'v':
             	 /* version-info */
-            		printf("SipVaildator-Version: 0.3a\n");
+            		printf("Sip-Validator-Version: 0.32a\n");
             		EXIT=1;
             		break;	
             	case 'b':
@@ -187,10 +189,10 @@ main(int argc, char *args[]) {
 	    // parse from file
 	  	file = fopen(parsefile,"r");
 	  	if (file!=NULL) {
-	  		yyset_in(file);
-	   		yyparse();
-	   		if (numSynErrs!=0) Log(synerrbufp,"");
-	   		fclose(file);
+	  		//yyset_in(file);
+	   		//yyparse();
+	   		//if (numSynErrs!=0) Log(synerrbufp,"");
+	   		//fclose(file);
 	   	} else {
 			fprintf(stderr,"Couldn't open file %s for parsing\n",parsefile);	
 		};
@@ -216,9 +218,10 @@ void printUsage() {
         printf(" -s  	      -- log messages to syslog\n"); 
         printf(" -o logopts   -- loglevel [default: 0]\n\n");
         printf(" -h  	      -- this message\n");
-        printf(" -v	      -- version\n");
-        printf(" -b	      -- Bison-Debug-Mode (for development)\n");
-        printf(" -r parsefile -- parse SIP-Message from \"parsefile\" (for development)\n\n");
+        printf(" -v	      -- version\n\n");
+        printf("Info about loglevel:\n \t0 - only timestamp\n");
+        printf("\t1 - + syntaxerror-messages\n");
+        printf("\t2 - + SIP-message-header\n\n");
 };
 
 // EOF sipvalidator.c
