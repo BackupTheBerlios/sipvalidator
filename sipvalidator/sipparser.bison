@@ -154,7 +154,7 @@ void initParsing();
  /* dynamic rule precedence to solve reduce/reduce conflicts */
 	  
 %%
-	
+
 alphanum	:	ALPHA
 		|	DIGIT
 		;
@@ -993,10 +993,14 @@ digest_uri_value:	rquest_uri
 
 /*  ###  Request Uri  ### */
 rquest_uri     	: 	"*" 
-		| 	scheme ':' pchar_star
+		| 	scheme ':' pchar_star rquest_uri_h
 		| 	abs_path
 		;	
-		
+
+rquest_uri_h    :       /*empty*/
+                |       rquest_uri_h ';' pchar_star
+                ;
+
 message_qop	:	QOP_E qop_value
 		;
 
@@ -1128,6 +1132,7 @@ display_name_h	:	token Lws
 		; /* aBNF: 1*(token LWS) */
 		
 contact_params	:	generic_param /* evtl. semanticcheck for c_p_q, c_p_expires */
+                |       USERE token
 		; /* aBNF: contact-params =  c-p-q/c-p-expires/contact-extension */
 		
 /* 
@@ -1457,7 +1462,7 @@ qop_options_h	:	/* empty */
 
 qop_value	:	token 
 		; /* aBNF: "auth" | "auth_int" | token */
-		
+
 Proxy_Authorization:	PROXY_AUTHORIZATION_HC credentials
 		;
 		
