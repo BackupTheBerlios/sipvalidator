@@ -29,7 +29,7 @@
  int i;
  int lwsnl; // flag -> if true Lws contained '\n' - used in updlocLws...()
 
-/* ********************************************************************	*/  
+/* ********************************************************************	*/
 /* 		update location-information for bison - methods		*/
 
  void newline() {
@@ -46,7 +46,7 @@
  void updlocLwsSqr() {
  	lwsnl=0;
  	for (i=0;i<yyleng;i++) {
-		if (yytext[i]=='\n') { 
+		if (yytext[i]=='\n') {
 			lwsnl=1;
 			yylloc.first_line = yylloc.last_line;
 			yylloc.last_line  = yylineno;
@@ -60,7 +60,7 @@
  void updlocLws() {
  	lwsnl=0;
  	for (i=0;i<yyleng;i++) {
-		if (yytext[i]=='\n') { 
+		if (yytext[i]=='\n') {
 			lwsnl=1;
 			yylloc.first_line = yylloc.last_line;
 			yylloc.last_line  = yylineno;
@@ -69,9 +69,9 @@
 			break;
 		};
 	};
-	if (!lwsnl) updloc(); 
+	if (!lwsnl) updloc();
  };
- 
+
 /* ********************************************************************	*/
 
 %}
@@ -119,7 +119,7 @@ Y	[yY]
 Z	[zZ]
 
 /* END of helping-rules */
- 
+
  /* flex should track linenumber */
 %option yylineno
 
@@ -130,12 +130,12 @@ Z	[zZ]
 
  /* *************************** special states ***************************** */
  /* - must come first to avoid conflicts with ALPHA,DIGIT,etc.		     */
- 
+
 <cl>{DIGIT}+		{ updloc(); yylval=atoi(yytext); return NUMBER; };
 
 <srvrval>\({LWS}?	{ updlocLws(); return LPAREN_SV; }
 <comment2>{LWS}?\)	{ updlocLws(); return RPAREN_C2; }
-    
+
 <comment,comment2>[\41-\47]|[\52-\133]|[\135-\176]  { updloc(); return CTEXTH; }
 
 <qstring>\41|[\43-\133]|[\135-\176] 	   { updloc(); return QDTEXTH; }
@@ -152,7 +152,7 @@ Z	[zZ]
 <comment,comment2,qstring,utf8ch,rphrase>[\200-\277]   	{ updloc(); return UTF8_CONT; }
 
 <utf8ch>[\41-\176] { updloc(); return x21_7E; }
- 
+
  /* date */
 <date>{G}{M}{T}	{ updloc(); return GMT; }
 <date>{M}{O}{N} { updloc(); return MON; }
@@ -174,8 +174,8 @@ Z	[zZ]
 <date>{O}{C}{T}	{ updloc(); return OCT; }
 <date>{N}{O}{V}	{ updloc(); return NOV; }
 <date>{D}{E}{C}	{ updloc(); return DEC; }
-<date>", "     { updloc(); return COMMA_SP; } 
- 
+<date>", "     { updloc(); return COMMA_SP; }
+
  /* ************************* end of special states *********************** */
 
 <nrml>{S}{I}{P}: 		{ updloc(); return SIP_COLON; }
@@ -183,7 +183,7 @@ Z	[zZ]
 <nrml>{U}{S}{E}{R}=		{ updloc(); return USERE; }
 <nrml>{M}{E}{T}{H}{O}{D}=	{ updloc(); return METHODE; }
 <nrml>{T}{T}{L}=		{ updloc(); return TTLE; }
-<nrml>{M}{A}{D}{D}{R}=		{ updloc(); return MADDRE; } 
+<nrml>{M}{A}{D}{D}{R}=		{ updloc(); return MADDRE; }
 <nrml>{T}{R}{A}{N}{S}{P}{O}{R}{T}= { updloc(); return TRANSPORTE; }
 
 <nrml>^{S}{I}{P}  		{ updloc(); return SIP; }
@@ -252,7 +252,7 @@ Z	[zZ]
 <nrml>{D}{U}{R}{A}{T}{I}{O}{N}{SWS}={SWS}   	{ updlocLwsSqr(); return DURATION_E; }
 <nrml>{U}{S}{E}{R}{N}{A}{M}{E}{SWS}={SWS}   	{ updlocLwsSqr(); return USERNAME_E; }
 <nrml>{U}{R}{I}{SWS}={SWS}	    		{ updlocLwsSqr(); return URI_E; }
-<nrml>{H}{A}{N}{D}{L}{I}{N}{G}{SWS}={SWS}   	{ updlocLwsSqr(); return HANDLING_E; } 
+<nrml>{H}{A}{N}{D}{L}{I}{N}{G}{SWS}={SWS}   	{ updlocLwsSqr(); return HANDLING_E; }
 <nrml>{P}{U}{R}{P}{O}{S}{E}{SWS}={SWS}    	{ updlocLwsSqr(); return PURPOSE_E; }
 <nrml>{N}{E}{X}{T}{N}{O}{N}{C}{E}{SWS}={SWS}  	{ updlocLwsSqr(); return NEXTNONCE_E; }
 <nrml>{R}{S}{P}{A}{U}{T}{H}{SWS}={SWS}    	{ updlocLwsSqr(); return RSPAUTH_E; }
@@ -285,7 +285,7 @@ Z	[zZ]
 "_"  		{ updloc(); return '_'; }
 "+"  		{ updloc(); return '+'; }
 "`"  		{ updloc(); return '`'; }
-"~"  		{ updloc(); return '~'; }	
+"~"  		{ updloc(); return '~'; }
 "<"  		{ updloc(); return '<'; }
 ">"  		{ updloc(); return '>'; }
 ";"  		{ updloc(); return ';'; }
@@ -304,12 +304,12 @@ Z	[zZ]
 
 
  /* special literals, etc. */
-"'"  		{ updloc(); return SHCOMMA; } 
+"'"  		{ updloc(); return SHCOMMA; }
 \\   		{ updloc(); return SBSLASH; }
 \"   		{ updloc(); return SDQUOTE; }
-" "  		{ updloc(); return SP; } 
+" "  		{ updloc(); return SP; }
 [\t] 		{ updloc(); return HTAB; }
-<nrml,srvrval>{LWS}	{ updlocLws(); return LWS; }
+<nrml,srvrval,utf8ch>{LWS}	{ updlocLws(); return LWS; }
 
 
  /* for fixing lws-ambiguity-problem */
