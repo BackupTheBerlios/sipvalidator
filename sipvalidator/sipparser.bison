@@ -1,5 +1,5 @@
 /* This file is part of SIP-Validator.
-   Copyright (C) 2003  Philippe Gérard, Mario Schulz
+   Copyright (C) 2003  Philippe Gerard, Mario Schulz
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -107,7 +107,7 @@ void initParsing();
 
 	SIP  SIP_COLON SIPS_COLON TRANSPORTE USERE METHODE TTLE MADDRE
 
-	SP HTAB CRLF SEMI LWS LWSSQR LPAREN_SV RPAREN_C2 COMMA_SP
+	SP HTAB CR LF SEMI LWS LWSSQR LPAREN_SV RPAREN_C2 COMMA_SP
 	
 	SLASH EQUAL LPAREN RPAREN RAQUOT COMMA SEMI COLON
  	
@@ -504,7 +504,7 @@ uri_parameters	:	/* empty */
 		|	uri_parameters ';' { SWITCHSTATE_NORMAL; } uri_parameter
 		;
 		
-uri_parameter	:	transport_param 
+uri_parameter	:	transport_param
 		|	user_param 
 		| 	method_param
                 |	ttl_param
@@ -605,10 +605,10 @@ sip_message_h	:	request
 		|	response
 		;
 			
-request		:	request_line message_header_star CRLF;
+request		:	request_line message_header_star CR LF;
 		;
 				
-request_line	:	method SP request_uri SP { SWITCHSTATE_SIPVERSION; } sip_version CRLF 
+request_line	:	method SP request_uri SP { SWITCHSTATE_SIPVERSION; } sip_version CR LF 
 				{ SWITCHSTATE_NORMAL; }
 		; /* errors caught by status-line */
 					
@@ -619,7 +619,7 @@ request_uri	:	sip_uri
 		
 absoluteUri	:	scheme ':' { SWITCHSTATE_START; } absoluteUri_h { SWITCHSTATE_NORMAL; }
 		;		
-		
+
 /* added to solve problem with domain (SPACES; Lws after RDQuot -> states) */
 absoluteUri_domain:	scheme ':' absoluteUri_h
 		;
@@ -668,7 +668,7 @@ uric_no_slash	:	unreserved
 path_segments	:	segment path_segments_h
 		;
 
-path_segments_h	:	/* empty */	
+path_segments_h	:	/* empty */
 		|	path_segments_h '/' segment
 		; /* aBNF: *( "/" segment ) */
 		
@@ -731,7 +731,7 @@ hilf_reg1       :	/* empty */
                 ;		
 		
 				
-reg_name	:	reg_name_h 
+reg_name	:	reg_name_h
 		|	reg_name reg_name_h
 		; /* aBNF: 1*( unreserved / escaped / "$" / "," / ";" 
 		 		/ ":" / "@" / "&" / "=" / "+" ) */
@@ -754,7 +754,7 @@ query		:	uric_star
 sip_version	: 	SIP '/' number '.' number 
 		;
 
-message_header	:	message_header_h CRLF 
+message_header	:	message_header_h CR LF 
 				{ SWITCHSTATE_NORMAL; }
 		|	error
 				{ SWITCHSTATE_NORMAL; yyclearin; yyerrok; if (EOM) YYACCEPT; }
@@ -816,11 +816,11 @@ method		:	token /* extension_method, INVITE ... -> evtl. Semcheck */
 
 /* extension_method:	token; <-- obsolete */
 										
-response	:	status_line message_header_star CRLF 
+response	:	status_line message_header_star CR LF 
 			/* [message_body] -> unnecessary */
 		;
 				
-status_line 	: 	sip_version SP status_code SP reason_phrase CRLF
+status_line 	: 	sip_version SP status_code SP reason_phrase CR LF
 		|	error { SWITCHSTATE_NORMAL; yyclearin; yyerrok; if (EOM) YYACCEPT; }
 		;
 						
@@ -866,11 +866,11 @@ generic_param 	:  	token
 		|	token Equal gen_value
 		;
 		
-gen_value	:  	token  
-		|	IPv6reference  /* hostname&IPv4address from host included in token */ 
+gen_value	:  	token
+		|	IPv6reference  /* hostname&IPv4address from host included in token */
 		|	quoted_string_lwssqr
 		;
- 
+
 Accept_Encoding	:	ACCEPT_ENCODING_HC
 		|	ACCEPT_ENCODING_HC encoding Accept_Encoding_h
 		;
@@ -1023,7 +1023,7 @@ request_digest_h:	request_digest_hh request_digest_hh request_digest_hh request_
 		
 request_digest_hh:	lhex lhex lhex lhex lhex lhex lhex lhex
 		;
-		
+
 auth_param	:	auth_param_name Equal token
 		|	auth_param_name Equal quoted_string_lwssqr
 		;
@@ -1170,45 +1170,45 @@ Content_Encoding:	CONTENT_ENCODING_HC content_coding Content_Encoding_h
 Content_Encoding_h:	/* empty */
 		|	Content_Encoding_h Comma content_coding
 		; /* aBNF: *(COMMA content-coding) */
-		
-Content_Language:	CONTENT_LANGUAGE_HC { SWITCHSTATE_START; } language_tag 
+
+Content_Language:	CONTENT_LANGUAGE_HC { SWITCHSTATE_START; } language_tag
 					Content_Language_h { SWITCHSTATE_NORMAL; }
 		;
 
 Content_Language_h:	/* empty */
 		|	Content_Language_h Comma language_tag
 		; /* aBNF: *(COMMA language-tag) */
-		
+
 language_tag	:	primary_tag language_tag_h
 		;
-		
+
 language_tag_h	:	/* empty */
 		|	language_tag_h '-' subtag
 		; /* aBNF: *( "-" subtag ) */
 
 primary_tag	:	alpha1_8
 		;
-		
+
 subtag		:	alpha1_8
 		;
 
-Content_Length	:	CONTENT_LENGTH_HC { cl_set=1; cl_parsed=0; SWITCHSTATE_CL; } 
+Content_Length	:	CONTENT_LENGTH_HC { cl_set=1; cl_parsed=0; SWITCHSTATE_CL; }
 				NUMBER { cl_set=1; cl_parsed=yylval; }
 		;
 
 Content_Type	:	CONTENT_TYPE_HC media_type
 		;
-		 
+
 media_type	:	m_type Slash m_subtype media_type_h
 		;
-		
+
 media_type_h	:	/* empty */
 		|	media_type_h Semi m_parameter
 		; /* aBNF: *(SEMI m-parameter) */
 
-m_type		: token /* s.b. */ 
+m_type		: token /* s.b. */
 		; /* aBNF: m-type = discrete_type / composite_type */
-		
+
 /* discrete-type  = "text" / "image" / "audio" / "video" / "application" / extension-token */
 /* composite-type = "message" / "multipart" / extension-token *
 
@@ -1216,30 +1216,30 @@ m_type		: token /* s.b. */
 
 extension_token	:	token /* <-- ietf_token, x_token */
 		;
-		
+
 /* ietf_token = token obsolete */
-		
+
 /* x_token = 'x-' token */
 		;
-		
+
 m_subtype	:	extension_token
 		/* |	iana_token */
  		;
 /* iana_token obsolete -> only used in m_subtype, extension_token just contains token*/
-		
+
 m_parameter	:	m_attribute Equal m_value
 		;
 
 m_attribute	:	token
 		;
-		
+
 m_value		:	token
 		|	quoted_string_lwssqr
 		;
-		
+
 CSeq		:	CSEQ_HC number Lws method
 		;
-		
+
 Date		:	DATE_HC { SWITCHSTATE_DATE; } sip_date { SWITCHSTATE_NORMAL; }
 		;
 
@@ -1248,10 +1248,10 @@ sip_date	:	rfc1123_date
 
 rfc1123_date	:	wkday COMMA_SP date1 SP time SP GMT
 		;
-		
-date1		:	digit2 SP month SP digit4 
+
+date1		:	digit2 SP month SP digit4
 		; /* day month year (e.g., 02 Jun 1982) */
-		
+
 time		:	digit2 ':' digit2 ':' digit2  /* 00:00:00 - 23:59:59 */
 		;
 
@@ -1269,7 +1269,7 @@ wkday		:	MON
                 |	SAT
                 |	SUN
                 ;
-                
+
 month		:	JAN
 		|	FEB
 		|	MAR
@@ -1278,42 +1278,79 @@ month		:	JAN
 		|	JUN
 		|	JUL
 		|	AUG
-		|	SEP 
+		|	SEP
 		|	OCT
 		|	NOV
 		|	DEC
 		;
-		
-Error_Info	:	ERROR_INFO_HC error_uri Error_Info_h 
+
+Error_Info	:	ERROR_INFO_HC error_uri Error_Info_h
 		;
 
 Error_Info_h	:	/* empty */
 		|	Error_Info_h Comma error_uri
 		; /* aBNF: *(COMMA error-uri) */
-		
+
 error_uri	:	Laquot absoluteUri Raquot error_uri_h
 		;
-		
+
 error_uri_h	:	/* empty */
 		|	error_uri_h Semi generic_param
 		; /* aBNF: *( SEMI generic-param ) */
-		
+
 Expires		:	EXPIRES_HC delta_seconds
-		;                         
-                         	
+		;
+
 From		:	FROM_HC from_spec
 		;
 
-from_spec	:	name_addr from_spec_h
-		|	addr_spec from_spec_h
+from_spec	:	name_addr from_spec1 /*no ambi*/
+		|	addr_spec from_tree  /*solve ambi*/
 		;
-		
-from_spec_h	:	/* empty */
-		|	from_spec_h Semi from_param
-		;
-		
+
+from_tree       :       /*empty*/
+                |       Semi from_param1 from_spec1
+                |       Semi gen_sub from_spec1
+                ;
+
+from_spec1      :       /*empty*/
+                |       from_spec1 Semi from_param
+                ;
+
+from_param1     :       from_sub
+                |       from_sub Equal tok_subset
+                ;
+
 from_param	:	generic_param /* includes tag_param */
 		;
+
+from_sub        :       tok_subset '`' tok_subset /*stop rekursion without empty*/
+                |       tok_subset '%' tok_subset
+                |       from_sub '`' tok_subset
+                |       from_sub '%' tok_subset
+                ;
+
+tok_subset      :       /*empty*/
+                |       tok_subset token_sub_h
+                ;
+
+token_sub_h     :       alphanum
+                |       '.'
+                |       '!'
+                |       '*'
+                |       '_'
+                |       '+'
+                |       '~'
+                ;
+
+gen_sub         :       Semi token Equal gen_val_sub
+                ;
+
+gen_val_sub	:  	from_sub
+		|	IPv6reference
+		|	quoted_string_lwssqr
+		;
+
 
 /* tag_param	:	TAG_E token; <-- obsolete */
 
@@ -1327,7 +1364,7 @@ In_Reply_To_h	:	/* empty */
 
 Max_Forwards	:	MAX_FORWARDS_HC number
 		;
-		
+
 MIME_Version	:	MIME_VERSION_HC number '.' number
 		;
 
@@ -1742,10 +1779,10 @@ int yyerror (char *s) {
 	  	  switch (*yytext) {
 	  	  case '\t': errtoktext="TAB";
 	  		     break;
-		  case '\r': if (*(yytext+1)=='\n') errtoktext="CRLF";
-		     	     else errtoktext="CR";
+		  case '\r': errtoktext="CR";
 			     break;
 		  case '\n': errtoktext="LF";
+		  	     break;
 		  case ' ' : errtoktext="SPACE";
 			     break;	 
 	  	  };
@@ -1757,10 +1794,10 @@ int yyerror (char *s) {
 		synerrbuf_left-=len;
 	  };
 	
-	/* resynch to next CRLF or EOB */
+	/* resynch to next LF or EOB */
 	  do {
 		token=yylex();
-	  } while (token!=CRLF && token!=EOB); 	
+	  } while (token!=LF && token!=EOB); 	
 
 	/* increase errornumber */
 	  numSynErrs++;
