@@ -52,6 +52,9 @@
  extern char *synerrbufp;
  extern int numSynErrs;
  
+/* prepare Parser */
+ extern int initParsing();
+ 
  
 main(int argc, char *args[]) {
 
@@ -239,6 +242,7 @@ main(int argc, char *args[]) {
 			
 	  		  yy_scan_bytes(fileBufferp,ctr);
 	   		
+			  initParsing();
 			  yyparse();
 	   		  if (numSynErrs!=0) Log(synerrbufp,fileBufferp);
 			
