@@ -52,7 +52,7 @@ void pcap_callback(u_char *buffer, const struct pcap_pkthdr* pkthdr, const u_cha
  	int packet_len = pkthdr->len;
 	
 	u_char* ether_payload[0];
-	int i;
+	int i,j;
 	u_int16_t ether_type;
 	u_char* ip_payload[0];
 	u_char* payload[0];
@@ -60,6 +60,7 @@ void pcap_callback(u_char *buffer, const struct pcap_pkthdr* pkthdr, const u_cha
 	u_int8_t protocol;
 	int sip_len;
 	int hdrs_len;
+	u_char validSip;
 
 	/* copy packet to buffer */
 	  memcpy(pbuffer,packet,packet_len);
@@ -92,12 +93,34 @@ void pcap_callback(u_char *buffer, const struct pcap_pkthdr* pkthdr, const u_cha
 	/* Get len of SIP-Message */
 	  sip_len=packet_len-(int)(payload[0]-pbuffer);
 	/* Get len of headers before SIP-Message */
-	  hdrs_len=packet_len-sip_len;
-	   
-	   
-	/* Check extracted message whether it is really SIP or not */	
-	// TO DO - HINT: look for SIP-Version (Reponse-at the beginning, Request-may in the first line ?) 
-	// SIP_Version: "SIP" "/" 1*DIGIT "." 1*DIGIT   	 
+	  hdrs_len=packet_len-sip_len;	 
+	
+	/* check whether it is really a SIP-message 
+	 * A SIP-message contains the string "SIP/" either at the
+	 * beginning (reponse) or near the end (request) of the first 
+	 * line as part of SIP-Version
+	**/
+	validSip=0;
+	if (sip_len<4);
+	else if (strncmp("SIP/",sipp,4)==0) validSip=1; // seems to be a response
+	else {
+	      // Goto end of line, then look backward for the first "S"
+	      // and try cmp "IP/"
+	      for (i=0;i<sip_len;i++) {
+	  	if (*(sipp+i)=='\n') {
+	  	  // EOL found	
+	  		for (j=i;j>0;j--) {
+	  			if (*(sipp+j)=='S') {
+	  			  // "S" found	
+	  				if (j+7<=i && strncmp("IP/",sipp+j+1,3)==0) validSip=1;
+	  				break;
+	  			};	
+	  		};
+	  		break;	
+	  	};			
+	      };
+	};
+	if (!validSip) break; // seems to be no SIP-message -> drop
 	   	 	  
 	/* prepare input for lex */
 	  // add 2 EOB's at the end of the actual packet in the buffer
