@@ -1,5 +1,5 @@
 /* This file is part of SIP-Validator.
-   Copyright (C) 2003  Philippe Gérard, Mario Schulz
+   Copyright (C) 2003  Philippe Gerard, Mario Schulz
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -21,15 +21,16 @@
  *
  * USAGE(Command-Line-Options):
  *
- *  -d device    -- device to sniff on [default: eth0]
- *  -p port      -- device-port [default: 5060]
- *  -n nummsgs   -- number of messages to sniff [default: -1 = unlimited]
- *  -t           -- log messages to stdout [default]
- *  -l logfile   -- log messages to "logfile"
- *  -s           -- log messages to syslog
- *  -o logopts   -- loglevel [default: 0]
+ *  -d <device>   -- device to sniff on [default: eth0]
+ *  -p <port>     -- device-port [default: 5060]
+ *  -n <nummsgs>  -- number of messages to sniff [default: -1 = unlimited]
+ *  -t            -- log messages to stdout [default]
+ *  -l <logfile>  -- log messages to "logfile"
+ *  -s            -- log messages to syslog
+ *  -o <logopts>  -- loglevel [default: 0]
+ *  -r <filename> -- parse from <filename> instead of sniffing from network 
  *
- *  -h           -- this message
+ *  -h            -- this message
  *     
  *  Info about loglevel:
  *	0 - only timestamp
@@ -53,30 +54,44 @@
  
  
 main(int argc, char *args[]) {
-		
+
 	/* initialization */
 	  char ch;	
 	  extern char *optarg;
     	  extern int optind, optopt,opterr;
-    	  opterr=0; // no automatic error-output
 	
-	  unsigned char BISONDEBUGMODE=0;
-	  unsigned char MSGFRMFILE=0;
-	  unsigned char EXIT=0;
-	  char* parsefile=NULL;
-	  char* logfile=NULL;
-	  char* device=NULL;
-	  int port=5060;
-	  int nummsgs=0;
-	  int logdests=0;
-	  int logvlevel=0;
-	  
+	  unsigned char BISONDEBUGMODE;
+	  unsigned char MSGFRMFILE;
+	  unsigned char EXIT;
+	  char* parsefile;
+	  char* logfile;
+	  char* device;
+	  int port;
+	  int nummsgs;
+	  int logdests;
+	  int logvlevel;
+          char* fileBufferp;
+          int ctr;
+
 	  int temp;
 	  FILE *file;
-	  
+
 	  extern int yydebug;
-			  
-	/* parse commandline-options */		  
+
+	  opterr=0; // no automatic error-output
+
+	  BISONDEBUGMODE=0;
+	  MSGFRMFILE=0;
+	  EXIT=0;
+	  parsefile=NULL;
+	  logfile=NULL;
+	  device=NULL;
+	  port=5060;
+	  nummsgs=0;
+	  logdests=0;
+	  logvlevel=0;
+	  
+	/* parse commandline-options */
 	  while ((ch = getopt(argc, args, ":d:p:n:l:sto:hvbr:")) != -1) {
         	switch (ch) {
         	case 'd':
@@ -104,7 +119,7 @@ main(int argc, char *args[]) {
             	case 's':
             	 /* log to syslog */
             	 	logdests+=LOGSYSLOG;
-            		break;	
+            		break;
             	case 't':
             	 /* log to stdout - default-log-destination */
             	 	logdests+=LOGSTDOUT;
@@ -124,20 +139,20 @@ main(int argc, char *args[]) {
             			break;
             		default:
             			logvlevel=MODDATE;
-            			break;		
+            			break;
             		};
-            		break;  		
+            		break;
             	case 'h':
-            	 /* help-message - if EXIT-flag set, there will be
-            	  *  		   a usage-message automatically 
+            	 /* help-message - if EXIT-flag is set, there will be
+            	  *  		   a usage-message automatically
             	  */
  			EXIT=1;
-            		break;	
+            		break;
             	case 'v':
             	 /* version-info */
             		printf("Sip-Validator-Version: 0.32a\n");
             		EXIT=1;
-            		break;	
+            		break;
             	case 'b':
             	 /* bison-debug-mode - only for development !*/
             		printf("bison-debugmode.\n");
@@ -148,10 +163,10 @@ main(int argc, char *args[]) {
             		parsefile=optarg;
             		printf("Parse message from file %s.\n",parsefile);
             		MSGFRMFILE=1;
-            		break;	
+            		break;
             	case ':':       /* -d,-p,-n,-l or -o without operand */
-                    	fprintf(stderr,"Option -%c requires an operand\n", optopt);  
-                    	EXIT=1;             	
+                    	fprintf(stderr,"Option -%c requires an operand\n", optopt);
+                    	EXIT=1;
                 	break;
         	case '?':
              		fprintf(stderr,"Unrecognised option: -%c\n", optopt);
@@ -159,11 +174,11 @@ main(int argc, char *args[]) {
             		break;
         	};
     	  };
-    	  	
-    	  	
+
+
     	/* quit if nessescary */
     	  if(EXIT) { printUsage(); exit(0); };
-    	 	
+
    	/* activate bison-debugging-modus ? */
 	  if (BISONDEBUGMODE) yydebug=1;
 	  else yydebug=0;
@@ -175,11 +190,11 @@ main(int argc, char *args[]) {
 	  /* defaults */
 	    if (logvlevel==0) logvlevel=MODDATE;
 	    if (logdests==0)  logdests=LOGSTDOUT;
-	  
+
 	  if (logdests&LOGFILE) {
 	  	if(openLogFile(logfile)==1) {
 	  		fprintf(stderr,"Couldn't open file %s for logging",logfile);
-	  		exit(1);	
+	  		exit(1);
 	  	};
 	  };
 	  setDestination(logvlevel,logdests);
@@ -188,37 +203,77 @@ main(int argc, char *args[]) {
 	  if (MSGFRMFILE) {
 	    // parse from file
 	  	file = fopen(parsefile,"r");
+
+		// read file, insert '\r' when missing before '\n'
 	  	if (file!=NULL) {
-	  		//yyset_in(file);
-	   		//yyparse();
-	   		//if (numSynErrs!=0) Log(synerrbufp,"");
-	   		//fclose(file);
+			// get file-size and number of missing '\r'
+                          ctr=0;
+			  temp=0;
+			  ch=getc(file);
+			  if (ch=='\n') ctr++;
+                          while(ch!=EOF){
+				if (ch=='\r') temp=1;
+                                ch=getc(file);
+                                ctr++;
+				if (ch=='\n' && !temp) ctr++;
+				temp=0;
+                          };
+                        
+			// alloc mem and copy file to it (with adding '\r' if needed)
+			if (fileBufferp=(char*)malloc(ctr)) {
+
+                          rewind(file);
+
+			  ctr=0;
+			  temp=0;
+                          ch=getc(file);
+                          if (ch=='\n') { fileBufferp[ctr]='\r'; ctr++; };
+			  while(ch!=EOF){
+				if (ch=='\r') temp=1;
+                                fileBufferp[ctr]=ch;
+                                ch=getc(file);
+                                ctr++;
+				if (ch=='\n' && !temp) { fileBufferp[ctr]='\r'; ctr++; };
+				temp=0;
+                          };
+			
+	  		  yy_scan_bytes(fileBufferp,ctr);
+	   		
+			  yyparse();
+	   		  if (numSynErrs!=0) Log(synerrbufp,fileBufferp);
+			
+			} else {
+				fprintf(stderr,"Couldn't allocate mem for loading file!\n");
+			};
+				  
+	   		fclose(file);
 	   	} else {
-			fprintf(stderr,"Couldn't open file %s for parsing\n",parsefile);	
+			fprintf(stderr,"Couldn't open file %s for parsing\n",parsefile);
 		};
 	  } else {
 	    // sniff from network and parse
 		sipsniff(device,port,nummsgs); // runs parsing automatically
 	  };
-	  
+
 	  /* quit sipvalidator */
 	    if (logdests&LOGFILE) closeLogFile();
 	    exit(0);
-	  
+
 } // END OF main
 
 /* usage-message of sipvalidator */
 void printUsage() {
 	printf("\nUSAGE:\n");
-	printf(" -d device    -- device to sniff on [default: eth0]\n");
-	printf(" -p port      -- device-port [default: 5060]\n");
- 	printf(" -n nummsgs   -- number of messages to sniff [default: -1 = unlimited]\n");
- 	printf(" -t 	      -- log messages to stdout [default]\n");
-        printf(" -l logfile   -- log messages to \"logfile\"\n");
-        printf(" -s  	      -- log messages to syslog\n"); 
-        printf(" -o logopts   -- loglevel [default: 0]\n\n");
-        printf(" -h  	      -- this message\n");
-        printf(" -v	      -- version\n\n");
+	printf(" -d <device>    -- device to sniff on [default: eth0]\n");
+	printf(" -p <port>      -- device-port [default: 5060]\n");
+ 	printf(" -n <nummsgs>   -- number of messages to sniff [default: -1 = unlimited]\n");
+ 	printf(" -t 	        -- log messages to stdout [default]\n");
+        printf(" -l <logfile>   -- log messages to \"logfile\"\n");
+        printf(" -s  	        -- log messages to syslog\n"); 
+        printf(" -o <logopts>   -- loglevel [default: 0]\n\n");
+        printf(" -r <filename>  -- parse from <filename> instead of sniffing from network\n"); 
+        printf(" -h  	        -- this message\n");
+        printf(" -v	        -- version\n\n");
         printf("Info about loglevel:\n \t0 - only timestamp\n");
         printf("\t1 - + syntaxerror-messages\n");
         printf("\t2 - + SIP-message-header\n\n");
