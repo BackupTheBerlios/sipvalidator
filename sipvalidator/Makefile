@@ -22,7 +22,7 @@ sipvalidator.o : sipvalidator.c LoggerModul.o
 	gcc -c sipvalidator.c
 	
 clean :
-	rm sipv sipparser.c sipparser.o sipscanner.c \
+	rm -f sipv sipparser.c sipparser.o sipscanner.c \
 	sipsniff.o sipvalidator.o sipparser.output \
 	LoggerModul.o
 
