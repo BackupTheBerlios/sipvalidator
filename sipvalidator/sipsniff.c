@@ -49,9 +49,7 @@ void pcap_callback(u_char *buffer, const struct pcap_pkthdr* pkthdr, const u_cha
  
   while(1) { // for leaving procedure easily if problem occurs
  
- 	/* Get packet-len */
- 	int packet_len = pkthdr->len;
-	
+	int packet_len;	
 	u_char* ether_payload[0];
 	int i,j;
 	u_int16_t ether_type;
@@ -62,7 +60,13 @@ void pcap_callback(u_char *buffer, const struct pcap_pkthdr* pkthdr, const u_cha
 	int sip_len;
 	int hdrs_len;
 	u_char validSip;
+	
+	/* Get packet-len */
+ 	  packet_len = pkthdr->len;
 
+	/* check len of received packet - drop if nessescary */
+	  if (packet_len>ETHER_MAX_LEN) break;
+	
 	/* copy packet to buffer */
 	  memcpy(pbuffer,packet,packet_len);
 	  /* add Nullbyte at the end for printing buffer later */
@@ -128,9 +132,10 @@ void pcap_callback(u_char *buffer, const struct pcap_pkthdr* pkthdr, const u_cha
 	// say lex what buffer to use for analysing 
 	    yy_scan_bytes(sipp, sip_len);
 	  
-	/* start flex&bison to check syntax */
+	/* start flex & bison to check syntax */
 	  initParsing();
-	  yyparse();  
+	  yyparse();
+	  CheckContentLength(sipp,sip_len);
 	  if (numSynErrs!=0) Log(synerrbufp,sipp);
 	  
 	  break;
