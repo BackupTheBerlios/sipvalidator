@@ -1,5 +1,5 @@
 /* This file is part of SIP-Validator.
-   Copyright (C) 2003  Philippe Gèrard, Mario Schulz
+   Copyright (C) 2003  Philippe Gérard, Mario Schulz
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -44,7 +44,7 @@
 
 #include "LoggerModul.h"
 
-#define BUFFERSIZE 	ETHER_MAX_LEN+2  /* net/ethernet.h */
+#define BUFFERSIZE 	ETHER_MAX_LEN  /* net/ethernet.h */
 #define MAXSTRINGSIZE	101
 
 

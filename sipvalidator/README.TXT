@@ -1,8 +1,8 @@
-Little Documentation of SIP-Validator
+Little documentation for SIP-Validator
 =====================================
 
 Requirements:
-  - Bison 1.875a
+  - Bison 1.875
   - flex 2.5.31
   - cc 3.2.3 (?)
   - libpcap-0.6.2-12

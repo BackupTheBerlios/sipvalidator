@@ -3,3 +3,14 @@
 
 - some bugfixes in Grammar-Description (rules comment, hvalue, sip_version)
 - sipv checks now whether a catched message is really a SIP-Message
+
+06.09.2003
+==========
+
+- sipsniff.c -> switched from method yy_scan_buffer to yy_scan_bytes due to a maybe-bug in the old method 
+- makefile -> added -f Flag in clean-section
+- sipvalidator.c -> added info about loglevel to option -h
+- fixed rule for User-Agent in scanner-def
+- modified rules warning, digest-uri, server, user-agent (scanner-def + parser-def)
+- scanner catches now all chars - also invalid - so that there is no more any output to stdout now
+  from the scanner
