@@ -146,12 +146,14 @@ void initParsing();
 	  MON TUE WED THU FRI SAT SUN
           JAN FEB MAR APR MAY JUN JUL AUG SEP OCT NOV DEC 
 
+ /* dynamic rule precedence to solve reduce/reduce conflicts */
+	  
 %%
-		
+	
 alphanum	:	ALPHA
 		|	DIGIT
 		;
-
+		
 hexdig		:	ALPHA { if (!isHexdig())logerrmsg("no hexdigit"); }
 		|	DIGIT
 		; /* aBNF: DIGIT / "A" / "B" / "C" / "D" / "E" / "F" */
@@ -355,7 +357,9 @@ quoted_string_h	:	quoted_string_hh SDQUOTE
 quoted_string_hh:	/* empty */
 		|	quoted_string_hh qdtext
 		|	quoted_string_hh QUOTED_PAIR
-		;
+		|	quoted_string_hh SEMI 
+		|	quoted_string_hh COMMA
+		; /* SEMI and COMMA added, cause it's recognized as token in qstring-state */
 		
 qdtext		:	Lws
 		|	QDTEXTH	/* %x21 / %x23-5B / %x5D-7E */
@@ -497,9 +501,9 @@ uri_parameter	:	transport_param
 		|	user_param 
 		| 	method_param
                 |	ttl_param
-                |	maddr_param
-                |	{ SWITCHSTATE_START; } other_param /* includes lr_param */
-               	;
+              	|	maddr_param
+              	|	{ SWITCHSTATE_START; } other_param /* includes lr_param */
+             	;
 
 transport_param	:	TRANSPORTE { SWITCHSTATE_START; } token
                 ; /* aBNF: "transport=" ( "udp" / "tcp" / "sctp" / "tls" / other_transport) */
@@ -587,7 +591,7 @@ hnv_unreserved	:	'['
 		|	'$'
 		;
 
-sip_message	:	{ initParsing(); } sip_message_h { YYACCEPT; }
+sip_message	:	sip_message_h { YYACCEPT; }
 		;
 
 sip_message_h	:	request  
@@ -1103,7 +1107,7 @@ name_addr	:	display_name Laquot addr_spec Raquot
 		| 	Laquot addr_spec Raquot
 		;
 		
-addr_spec	:	sip_uri		
+addr_spec	:	sip_uri
 		|	sips_uri
 		|	absoluteUri
 		;
@@ -1545,17 +1549,23 @@ delay		:	/* empty */
 		; /* aBNF: delay = *(DIGIT) [ "." *(DIGIT) ] */
 		
 
+/* to do -> original-regel fuer to auskommentiert und durch extension-header-regel ersetzt,
+   da amibiguity-error momentan noch nicht geloest */
+To		:	TO_HC { SWITCHSTATE_UTF8CH; } header_value { SWITCHSTATE_NORMAL; }
+		;
+/*
 To		:	TO_HC name_addr To_h
 		|	TO_HC addr_spec To_h
-             	;
-             	
-To_h		:	/* empty */
+            	;
+            	
+To_h		:	// empty  
 		|	To_h Semi to_param
-		; /* aBNF: *( SEMI to-param ) */
+		; // aBNF: *( SEMI to-param )
              
-to_param	:	generic_param /* includes tag_param */
+to_param	:	generic_param // includes tag_param
 		;
-		
+*/
+				
 Unsupported	:	UNSUPPORTED_HC option_tag comma_option_tag_star
 		;
 		
@@ -1661,6 +1671,8 @@ header_value	:	/* empty */
 		|	header_value text_utf8char 
 		|	header_value UTF8_CONT
 		|	header_value Lws
+		|	header_value SEMI  /* cause of tokenizing it in utf8CH-state */
+		|	header_value COMMA /* s. a. */
 		; /* aBNF: *(TEXT-UTF8char / UTF8-CONT / LWS) */
 		
 /* message_body -> obsolete */
