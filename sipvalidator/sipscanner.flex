@@ -124,15 +124,17 @@ Z	[zZ]
 %option yylineno
 
  /* start-states - !!! don't change order !!! */
-%START nrml comment qstring utf8ch date sipversion rphrase warning srvrval comment2 diguri domain
+%START nrml comment qstring utf8ch date sipversion rphrase warning srvrval comment2 diguri domain cl
 
 %%
 
  /* *************************** special states ***************************** */
  /* - must come first to avoid conflicts with ALPHA,DIGIT,etc.		     */
+ 
+<cl>{DIGIT}+		{ updloc(); yylval=atoi(yytext); return NUMBER; };
 
-<srvrval>\({LWS}?		   { updlocLws(); return LPAREN_SV; }
-<comment2>{LWS}?\)		   { updlocLws(); return RPAREN_C2; }
+<srvrval>\({LWS}?	{ updlocLws(); return LPAREN_SV; }
+<comment2>{LWS}?\)	{ updlocLws(); return RPAREN_C2; }
     
 <comment,comment2>[\41-\47]|[\52-\133]|[\135-\176]  { updloc(); return CTEXTH; }
 
@@ -313,7 +315,6 @@ Z	[zZ]
  /* for fixing lws-ambiguity-problem */
 <nrml>{LWS}{LWS}		{ updlocLwsSqr(); return LWSSQR; }
 <nrml>\>{LWS}			{ updlocLws(); return RAQUOT; };
-<nrml>{LWS}?\*{LWS}? 		{ updlocLwsSqr(); return STAR; }
 <nrml,srvrval>{LWS}?\/{LWS}? 	{ updlocLwsSqr(); return SLASH; }
 <nrml>{LWS}?\={LWS}? 		{ updlocLwsSqr(); return EQUAL; }
 <nrml,comment>{LWS}?\({LWS}? 	{ updlocLwsSqr(); return LPAREN; }
