@@ -78,15 +78,17 @@
 
  /* helping-rules */
 
-WSP 			([\t]|" ")
-LWS 			({WSP}*\r\n)?{WSP}+
-SWS 			({LWS})?
+WSP 		([\t]|" ")
+LWS 		({WSP}*\r\n)?{WSP}+
+SWS 		({LWS})?
 
-HCOLON			(" "|[\t])*:{SWS}
-HC			(" "|[\t])*:{SWS}
+HCOLON		(" "|[\t])*:{SWS}
+HC		(" "|[\t])*:{SWS}
 
-DIGIT 			[0-9]
-ALPHA 			[A-Za-z]
+DIGIT 		[0-9]
+ALPHA 		[A-Za-z]
+
+TOKEN		([0-9A-Za-z\-\.\!\%\*\_\+\`\'\~])+
 
  /* used for caseinsensitivity of keywords */
 A	[aA]
@@ -240,7 +242,7 @@ Z	[zZ]
 ^{V}{HC}  			 		{ updlocLws(); return VIA_HC; }
 ^{W}{A}{R}{N}{I}{N}{G}{HC}  		 	{ updlocLws(); return WARNING_HC; }
 ^{W}{W}{W}-{A}{U}{T}{H}{E}{N}{T}{I}{C}{A}{T}{E}{HC} { updlocLws(); return WWW_AUTHENTICATE_HC; }
-^({ALPHA}|{DIGIT})+{HC}				{ updlocLws(); return HEADER_NAME_HC; }
+^{TOKEN}{HC}					{ updlocLws(); return HEADER_NAME_HC; }
 
 
 <nrml>{D}{I}{G}{E}{S}{T}{LWS}  	    		{ updlocLws(); return DIGEST_LWS; }
