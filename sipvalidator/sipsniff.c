@@ -1,5 +1,5 @@
 /* This file is part of SIP-Validator.
-   Copyright (C) 2003  Philippe Gèrard, Mario Schulz
+   Copyright (C) 2003  Philippe GÃ©rard, Mario Schulz
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -27,8 +27,6 @@
 **/
 
 #include "sipsniff.h"
-
-#define YY_END_OF_BUFFER_CHAR 0
 
 /* resource-allocation-flags */
   unsigned char ALLOC_BUFFER   = 0;
@@ -120,15 +118,10 @@ void pcap_callback(u_char *buffer, const struct pcap_pkthdr* pkthdr, const u_cha
 	  	};			
 	      };
 	};
-	if (!validSip) break; // seems to be no SIP-message -> drop
-	   	 	  
-	/* prepare input for lex */
-	  // add 2 EOB's at the end of the actual packet in the buffer
-	    pbuffer[packet_len]=YY_END_OF_BUFFER_CHAR;
-	    pbuffer[packet_len+1]=YY_END_OF_BUFFER_CHAR;
-	    
-	  // say lex what buffer to use for analysing 
-	    yy_scan_buffer(sipp, sip_len+2);
+	if (!validSip) break;  // seems to be no SIP-message -> drop
+	 	 	  
+	// say lex what buffer to use for analysing 
+	    yy_scan_bytes(sipp, sip_len);
 	  
 	/* start flex&bison to check syntax */
 	  yyparse();  
