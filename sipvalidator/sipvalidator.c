@@ -28,10 +28,10 @@
  *  -l <logfile>  -- log messages to "logfile"
  *  -s            -- log messages to syslog
  *  -o <logopts>  -- loglevel [default: 0]
- *  -r <filename> -- parse from <filename> instead of sniffing from network 
+ *  -r <filename> -- parse from <filename> instead of sniffing from network
  *
  *  -h            -- this message
- *     
+ *
  *  Info about loglevel:
  *	0 - only timestamp
  *      1 - + syntaxerror-messages
@@ -43,10 +43,10 @@
 #include "LoggerModul.h"
 #include "sipsniff.h"
 
-/* syntax-error-stuff */ 
+/* syntax-error-stuff */
  extern char *synerrbufp;
  extern int numSynErrs;
- 
+
 /* usage-message of sipvalidator */
  void printUsage();
 
@@ -54,14 +54,16 @@
  extern void initParsing();
  extern void CheckContentLength(char* sipp,int siplen);
  extern char getopt(int argc, char *args[], char *mask);
-   
+
+ const char* version = "0.41b";
+
 int main(int argc, char *args[]) {
 
 	/* initialization */
-	  char ch;	
+	  char ch;
 	  extern char *optarg;
     	  extern int optopt,opterr;
-	
+
 	  unsigned char BISONDEBUGMODE;
 	  unsigned char MSGFRMFILE;
 	  unsigned char EXIT;
@@ -73,8 +75,8 @@ int main(int argc, char *args[]) {
 	  int logdests;
 	  int logvlevel;
           char* fileBufferp;
-          int ctr;
-	  
+          int size,ctr;
+
 	  int temp;
 	  FILE *file;
 
@@ -92,7 +94,7 @@ int main(int argc, char *args[]) {
 	  nummsgs=0;
 	  logdests=0;
 	  logvlevel=0;
-	  
+
 	/* parse commandline-options */
 	  while ((ch = getopt(argc, args, ":d:p:n:l:sto:hvbr:")) != -1) {
         	switch (ch) {
@@ -208,20 +210,20 @@ int main(int argc, char *args[]) {
 		// read file, insert '\r' when missing before '\n'
 	  	if (file!=NULL) {
 			// get file-size and number of missing '\r'
-                          ctr=0;
+                          size=0;
 			  temp=0;
 			  ch=getc(file);
-			  if (ch=='\n') ctr++;
+			  if (ch=='\n') size++;
                           while(ch!=EOF) {
 				if (ch=='\r') temp=1;
                                 ch=getc(file);
-                                ctr++;
-				if (ch=='\n' && !temp) ctr++;
+                                size++;
+				if (ch=='\n' && !temp) size++;
 				temp=0;
                           };
-                        
+
 			// alloc mem and copy file to it (with adding '\r' if needed)
-			fileBufferp=(char*)malloc(ctr);
+			fileBufferp=(char*)malloc(size+1); // one more for 0-Byte
 			if (fileBufferp!=NULL) {
 
                           rewind(file);
@@ -230,7 +232,7 @@ int main(int argc, char *args[]) {
 			  temp=0;
                           ch=getc(file);
                           if (ch=='\n') { fileBufferp[ctr]='\r'; ctr++; };
-			  while(ch!=EOF){
+			  while(ch!=EOF) {
 				if (ch=='\r') temp=1;
                                 fileBufferp[ctr]=ch;
                                 ch=getc(file);
@@ -238,20 +240,23 @@ int main(int argc, char *args[]) {
 				if (ch=='\n' && !temp) { fileBufferp[ctr]='\r'; ctr++; };
 				temp=0;
                           };
-	  		  
-			  yy_scan_bytes(fileBufferp,ctr);
-	   		
+
+			  // add 0-Byte
+			  fileBufferp[size] = '\0';
+
+			  yy_scan_bytes(fileBufferp,size);
+
 			  initParsing();
 			  yyparse();
-			  
+
 			  CheckContentLength(fileBufferp,ctr);
-			  
+
 	   		  if (numSynErrs!=0) Log(synerrbufp,fileBufferp);
-			
+
 			} else {
 				fprintf(stderr,"Couldn't allocate mem for loading file!\n");
 			};
-				  
+
 	   		fclose(file);
 	   	} else {
 			fprintf(stderr,"Couldn't open file %s for parsing\n",parsefile);
@@ -269,16 +274,16 @@ int main(int argc, char *args[]) {
 
 /* usage-message of sipvalidator */
 void printUsage() {
-	printf("Sip-Validator-Version: 0.4b\n");
+	printf("Sip-Validator-Version: %s\n",version);
 	printf("\nUSAGE:\n");
 	printf(" -d <device>    -- device to sniff on [default: eth0]\n");
 	printf(" -p <port>      -- device-port [default: 5060]\n");
  	printf(" -n <nummsgs>   -- number of messages to sniff [default: -1 = unlimited]\n");
  	printf(" -t 	        -- log messages to stdout [default]\n");
         printf(" -l <logfile>   -- log messages to \"logfile\"\n");
-        printf(" -s  	        -- log messages to syslog\n"); 
+        printf(" -s  	        -- log messages to syslog\n");
         printf(" -o <logopts>   -- loglevel [default: 0]\n\n");
-        printf(" -r <filename>  -- parse from <filename> instead of sniffing from network\n"); 
+        printf(" -r <filename>  -- parse from <filename> instead of sniffing from network\n");
         printf(" -h  	        -- this message\n");
         printf(" -v	        -- version\n\n");
         printf("Info about loglevel:\n \t0 - only timestamp\n");
