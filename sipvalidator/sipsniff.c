@@ -41,6 +41,9 @@ pcap_t *pcap_handle;
 /* variables for syntaxerror-count */
   extern int numSynErrs;
 
+/* prepare Parser */
+ extern int initParsing();
+
 /* pcap-callback-procedure */
 void pcap_callback(u_char *buffer, const struct pcap_pkthdr* pkthdr, const u_char* packet) {
  
@@ -62,6 +65,8 @@ void pcap_callback(u_char *buffer, const struct pcap_pkthdr* pkthdr, const u_cha
 
 	/* copy packet to buffer */
 	  memcpy(pbuffer,packet,packet_len);
+	  /* add Nullbyte at the end for printing buffer later */
+	  pbuffer[packet_len]='\0';
 	
 	/* get etherheader to check type, get ether_payload */	 
 	  ether_type = handle_ethernet(ether_payload, pbuffer);
@@ -124,6 +129,7 @@ void pcap_callback(u_char *buffer, const struct pcap_pkthdr* pkthdr, const u_cha
 	    yy_scan_bytes(sipp, sip_len);
 	  
 	/* start flex&bison to check syntax */
+	  initParsing();
 	  yyparse();  
 	  if (numSynErrs!=0) Log(synerrbufp,sipp);
 	  
