@@ -29,8 +29,8 @@
 #include <ctype.h>
 #include <string.h>
 
-/* yylval should be of type char */
- #define YYSTYPE char
+/* yylval should be of type int */
+ #define YYSTYPE int
  
 // #define YYERROR_VERBOSE <-- don't use it, it's causing segfaults !!!
  
@@ -53,6 +53,7 @@
  #define SWITCHSTATE_COMMENT2   BEGINB  10
  #define SWITCHSTATE_DIGURI	BEGINB  11
  #define SWITCHSTATE_DOMAIN	BEGINB  12
+ #define SWITCHSTATE_CL		BEGINB  13
  
 /* *** END OF state-managing-macros *** */
 
@@ -61,6 +62,10 @@
  extern YYSTYPE yylval;
  extern int yylineno;
 
+/* Content-Length-stuff */
+ char	cl_set; // flag, set if Content-Length-Header occured 
+ int	cl_parsed; // parsed value for Content-Length
+ 
 /* End of message flag */
  char EOM=0; 
  
@@ -76,10 +81,10 @@
  char *synerrbufp; // points to begin of synerrbuffer
  char *errbufp; // points to one after the last entry
  int synerrbuf_left;
-
+ 
  int numSynErrs=0;
  void logerrmsg(char* errmsg);
- void logsemerrmsg(char* errmsg);
+ void logBadContentLength();
  int yyerror(char *s); 
  void resetSynerrbuf();
 
@@ -98,13 +103,13 @@ void initParsing();
 
 %start  sip_message
 
-%token 	ALPHA DIGIT
+%token 	ALPHA DIGIT NUMBER
 
 	SIP  SIP_COLON SIPS_COLON TRANSPORTE USERE METHODE TTLE MADDRE
 
 	SP HTAB CRLF SEMI LWS LWSSQR LPAREN_SV RPAREN_C2 COMMA_SP
 	
-	STAR SLASH EQUAL LPAREN RPAREN RAQUOT COMMA SEMI COLON
+	SLASH EQUAL LPAREN RPAREN RAQUOT COMMA SEMI COLON
  	
 	SDQUOTE LWS_SDQUOTE SDQUOTE_LWS SBSLASH SHCOMMA
 	
@@ -278,7 +283,9 @@ word_h		:	alphanum
 		;
 
 Star    	:	'*'
-		|	STAR
+		|	Lws '*'
+		|	'*' Lws
+		|	Lws '*' Lws
 		;
 		
 Slash   	:	'/'
@@ -834,7 +841,7 @@ reason_phrase_h	:	/* empty */
 		|	reason_phrase_h HTAB
 		;
 					
-Accept		: 	ACCEPT_HC
+Accept		: 	ACCEPT_HC 
 		|	ACCEPT_HC accept_range Accept_h	
 		;			
 
@@ -1185,7 +1192,8 @@ primary_tag	:	alpha1_8
 subtag		:	alpha1_8
 		;
 
-Content_Length	:	CONTENT_LENGTH_HC number
+Content_Length	:	CONTENT_LENGTH_HC { cl_set=1; cl_parsed=0; SWITCHSTATE_CL; } 
+				NUMBER { cl_set=1; cl_parsed=yylval; }
 		;
 
 Content_Type	:	CONTENT_TYPE_HC media_type
@@ -1787,6 +1795,21 @@ void logerrmsg(char* errmsg) {
 	  };
 };
 
+void LogBadContentLength() {
+	int len;
+	/* write error-message into buffer */
+	  if (synerrbuf_left-100<1) {
+	 	fprintf(stderr,"internal syntax-error-buffer is full\n");
+	  } else {
+	  	 len=snprintf(errbufp,100,"Content-Length given in SIP-Message-Header is invalid\n");
+		 errbufp+=len;
+		 synerrbuf_left-=len;
+		 
+		 /* increase errornumber */
+		   numSynErrs++;
+	  };
+};
+
 /* Resets syntaxerror-stuff to init state */
 void resetSynerrbuf() {
 	numSynErrs=0;
@@ -1794,6 +1817,24 @@ void resetSynerrbuf() {
  	errbufp=synerrbuffer;
  	synerrbufp=synerrbuffer;
  	synerrbuffer[0]=0;
+};
+
+void CheckContentLength(char* sipp,int siplen) {
+	int cl,i;
+			 
+	if (cl_set) {
+	  // look for pos. where content starts (2 following CRLF's)
+		for (i=0;i+3<siplen;i++) {
+			if (sipp[i]=='\r' && sipp[i+1]=='\n') {
+				if (sipp[i+2]=='\r' && sipp[i+3]=='\n') {
+					cl=i+4;
+					if ((siplen-cl)!=cl_parsed) LogBadContentLength();
+					break;	
+				};
+				i=i+2; 
+			};
+		};
+	};
 };
 
 /* *************************** END OF errorhandling-procedures ************* */
@@ -1829,7 +1870,6 @@ int isLHexdig() {
 };
 
 /* *********************** END OF predicate-procedures ********************* */
-
 
 /* reset all nessescary values to initial state */
 void initParsing() {
