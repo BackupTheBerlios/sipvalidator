@@ -1,5 +1,5 @@
 /* This file is part of SIP-Validator.
-   Copyright (C) 2003  Philippe Gèrard, Mario Schulz
+   Copyright (C) 2003  Philippe GÃ©rard, Mario Schulz
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -38,7 +38,7 @@ void updloc() {
  /* helping-rules */
 
 WSP 			([\t]|" ")
-LWS 			({WSP}*[\n])?{WSP}+
+LWS 			({WSP}*[\r\n])?{WSP}+
 SWS 			({LWS})?
 
 HCOLON			(" "|[\t])*:{SWS}
@@ -81,27 +81,30 @@ Z	[zZ]
 %option yylineno
 
  /* start-states - !!! don't change order !!! */
-%START nrml comment qstring utf8ch date sipversion rphrase
+%START nrml comment qstring utf8ch date sipversion rphrase warning srvrval comment2 diguri
 
 %%
 
  /* *************************** special states ***************************** */
  /* - must come first to avoid conflicts with ALPHA,DIGIT,etc.		     */
-   
-<comment>[\41-\47]|[\52-\133]|[\135-\176]  { updloc(); return CTEXTH; } 
+
+<srvrval>\(({LWS}|{WSP})?		   { updloc(); return LPAREN_SV; }
+<comment2>({LWS}|{WSP})?\)		   { updloc(); return RPAREN_C2; }
+    
+<comment,comment2>[\41-\47]|[\52-\133]|[\135-\176]  { updloc(); return CTEXTH; }
 
 <qstring>\41|[\43-\133]|[\135-\176] 	   { updloc(); return QDTEXTH; }
 
  /* quoted-pair */
-<comment,qstring>\\[\0-\11\13-\14\16-\177] { updloc(); return QUOTED_PAIR; }
+<comment,comment2,qstring>\\[\0-\11\13-\14\16-\177] { updloc(); return QUOTED_PAIR; }
 
  /* utf8 */
-<comment,qstring,utf8ch,rphrase>[\300-\337]	{ updloc(); return xC0_DF; }
-<comment,qstring,utf8ch,rphrase>[\340-\357]     { updloc(); return xE0_EF; }
-<comment,qstring,utf8ch,rphrase>[\360-\367]     { updloc(); return xF0_F7; }
-<comment,qstring,utf8ch,rphrase>[\370-\373]     { updloc(); return xF8_Fb; }
-<comment,qstring,utf8ch,rphrase>[\374-\375]     { updloc(); return xFC_FD; }
-<comment,qstring,utf8ch,rphrase>[\200-\277]   	{ updloc(); return UTF8_CONT; }
+<comment,comment2,qstring,utf8ch,rphrase>[\300-\337]	{ updloc(); return xC0_DF; }
+<comment,comment2,qstring,utf8ch,rphrase>[\340-\357]    { updloc(); return xE0_EF; }
+<comment,comment2,qstring,utf8ch,rphrase>[\360-\367]    { updloc(); return xF0_F7; }
+<comment,comment2,qstring,utf8ch,rphrase>[\370-\373]    { updloc(); return xF8_Fb; }
+<comment,comment2,qstring,utf8ch,rphrase>[\374-\375]    { updloc(); return xFC_FD; }
+<comment,comment2,qstring,utf8ch,rphrase>[\200-\277]   	{ updloc(); return UTF8_CONT; }
 
 <utf8ch>[\41-\176] { updloc(); return x21_7E; }
  
@@ -126,7 +129,6 @@ Z	[zZ]
 <date>{O}{C}{T}	{ updloc(); return OCT; }
 <date>{N}{O}{V}	{ updloc(); return NOV; }
 <date>{D}{E}{C}	{ updloc(); return DEC; } 
-
  
  /* ************************* end of special states *********************** */
 
@@ -191,7 +193,7 @@ Z	[zZ]
 ^{T}{O}{HC}  		 			{ updloc(); return TO_HC; }
 ^{T}{HC}  		 			{ updloc(); return TO_HC; }
 ^{U}{N}{S}{U}{P}{P}{O}{R}{T}{E}{D}{HC}  	{ updloc(); return UNSUPPORTED_HC; }
-^{U}{S}{E}{R}_{A}{G}{E}{N}{T}{HC}	 	{ updloc(); return USER_AGENT_HC; }
+^{U}{S}{E}{R}-{A}{G}{E}{N}{T}{HC}	 	{ updloc(); return USER_AGENT_HC; }
 ^{V}{I}{A}{HC}  			 	{ updloc(); return VIA_HC; }
 ^{V}{HC}  			 		{ updloc(); return VIA_HC; }
 ^{W}{A}{R}{N}{I}{N}{G}{HC}  		 	{ updloc(); return WARNING_HC; }
@@ -251,6 +253,8 @@ Z	[zZ]
 "?"		{ updloc(); return '?'; }
 "{"		{ updloc(); return '{'; }
 "}"		{ updloc(); return '}'; }
+"("		{ updloc(); return '('; }
+")"		{ updloc(); return ')'; }
 
 
  /* special literals, etc. */
@@ -259,33 +263,37 @@ Z	[zZ]
 \"   		{ updloc(); return SDQUOTE; }
 " "  		{ updloc(); return SP; } 
 [\t] 		{ updloc(); return HTAB; }
-{LWS}		{ updloc(); return LWS; }
+<nrml,srvrval>{LWS}	{ updloc(); return LWS; }
 
 
  /* for fixing lws-ambiguity-problem */
-{LWS}{LWS}		{ updloc(); return LWSSQR; }
->{LWS}			{ updloc(); return RAQUOT; };
-{LWS}?*{LWS}? 		{ updloc(); return STAR; }
-{LWS}?\/{LWS}? 		{ updloc(); return SLASH; }
-{LWS}?={LWS}? 		{ updloc(); return EQUAL; }
-{LWS}?\({LWS}? 		{ updloc(); return LPAREN; }
-{LWS}?\){LWS}? 		{ updloc(); return RPAREN; }
-{LWS}?,{LWS}? 		{ updloc(); return COMMA; }
-{LWS}?;{LWS}? 		{ updloc(); return SEMI; }
-{LWS}?:{LWS}? 		{ updloc(); return COLON; }
+<nrml>{LWS}{LWS}		{ updloc(); return LWSSQR; }
+<nrml>>{LWS}			{ updloc(); return RAQUOT; };
+<nrml>{LWS}?*{LWS}? 		{ updloc(); return STAR; }
+<nrml,srvrval>{LWS}?\/{LWS}? 	{ updloc(); return SLASH; }
+<nrml>{LWS}?={LWS}? 		{ updloc(); return EQUAL; }
+<nrml,comment>{LWS}?\({LWS}? 	{ updloc(); return LPAREN; }
+<nrml,comment>{LWS}?\){LWS}? 	{ updloc(); return RPAREN; }
+{LWS}?,{LWS}? 			{ updloc(); return COMMA; }
+{LWS}?;{LWS}? 			{ updloc(); return SEMI; }
+<nrml>{LWS}?:{LWS}? 		{ updloc(); return COLON; }
 
-{LWS}\"			{ updloc(); return LWS_SDQUOTE; }
-\"{LWS}			{ updloc(); return SDQUOTE_LWS; }
+<nrml,diguri>{LWS}\"			{ updloc(); return LWS_SDQUOTE; }
+<nrml,diguri>\"{LWS}			{ updloc(); return SDQUOTE_LWS; }
 
 {ALPHA} 	{ updloc(); return ALPHA; };
 {DIGIT} 	{ updloc(); return DIGIT; };
 
-[\n] {
+\r\n {
   // location-update
     yylloc.first_line   = yylloc.last_line=yylineno;
     yylloc.first_column = yylloc.last_column=1;
   return CRLF;
 }
+
+ /* rule to catch chars that aren't catched by any other rule above */
+[\0-\377]	{ updloc(); return INVALID_CHAR; }
+
 %%
 
 #ifndef yywrap
