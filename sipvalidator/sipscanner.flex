@@ -323,16 +323,17 @@ Z	[zZ]
 {LWS}?\;{LWS}? 			{ updlocLwsSqr(); return SEMI; }
 <nrml>{LWS}?\:{LWS}? 		{ updlocLwsSqr(); return COLON; }
 
-<nrml,diguri,domain>{LWS}\"		{ updlocLws(); return LWS_SDQUOTE; }
-<nrml,diguri,domain>\"{LWS}		{ updlocLws(); return SDQUOTE_LWS; }
+<nrml,diguri,domain>{LWS}\"	{ updlocLws(); return LWS_SDQUOTE; }
+<nrml,diguri,domain>\"{LWS}	{ updlocLws(); return SDQUOTE_LWS; }
 
-{ALPHA} 	{ updloc(); return ALPHA; };
-{DIGIT} 	{ updloc(); return DIGIT; };
+{ALPHA} { updloc(); return ALPHA; };
+{DIGIT} { updloc(); return DIGIT; };
 
-\r\n {
+\r 	{ return CR; }
+\n {
   // location-update
     newline();
-  return CRLF;
+  return LF;
 }
 
  /* rule to catch chars that aren't catched by any other rule above */
