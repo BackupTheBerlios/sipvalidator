@@ -1,0 +1,5 @@
+01.09.2003
+==========
+
+- some bugfixes in Grammar-Description (rules comment, hvalue, sip_version)
+- sipv checks now whether a catched message is really a SIP-Message
