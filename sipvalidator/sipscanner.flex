@@ -47,7 +47,7 @@ HC			(" "|[\t])*:{SWS}
 DIGIT 			[0-9]
 ALPHA 			[A-Za-z]
 
- /* need for caseinsensitivity of keywords */
+ /* used for caseinsensitivity of keywords */
 A	[aA]
 B	[bB]
 C	[cC]
@@ -125,7 +125,7 @@ Z	[zZ]
 <date>{S}{E}{P} { updloc(); return SEP; }
 <date>{O}{C}{T}	{ updloc(); return OCT; }
 <date>{N}{O}{V}	{ updloc(); return NOV; }
-<date>{D}{E}{C}	{ return DEC; } 
+<date>{D}{E}{C}	{ updloc(); return DEC; } 
 
  
  /* ************************* end of special states *********************** */
