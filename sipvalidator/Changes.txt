@@ -34,3 +34,14 @@
 	1. rule "To" replaced by rule for extension-header 'cause of ambiguity-error
            that is not yet solved - to do !!!
 	2. added SEMI and COMMA to qdtext, header_value
+	
+23.09.2003
+==========
+- message_header: Param To
+	1. In the moment no uri-param in addr_spec allowed, 
+	   (only the addr_spec after an To)
+
+20.10.2003
+==========
+- added check if Content-Length given in SIP-Message-Header is the right value
+- fixed problem with */STAR (occured in rule Accept, (rule Star only used in rule Contact))
