@@ -35,7 +35,7 @@
 // #define YYERROR_VERBOSE <-- don't use it, it's causing segfaults !!!
  
 /* ****** state-managing-macros ****** */
- extern int yy_start; /* lex-kludge */
+ extern int yy_start;
  #ifndef BEGIN
  #define BEGIN (yy_start) = 1 + 2 *
  #endif
@@ -84,7 +84,7 @@
  int isHexdig();
  int isLHexdig();
  
-/* prepare parsing */ 
+/* prepare parsing-method */ 
 void initParsing();
 
 %}
@@ -218,15 +218,12 @@ utf8_nonascii	:	xC0_DF UTF8_CONT
 lhex		:	ALPHA { if(!isLHexdig())logerrmsg("no lhexdigit(0-9,a-f)"); }
 		|	DIGIT
 		; /* aBNF: DIGIT / %x61-%x66 ; a-f */
-
-token		:	token_h
-		;
-		
-token_h		:	 token_hh
-		|	 token_h token_hh
+	
+token		:	 token_h
+		|	 token token_h
 		;
 					
-token_hh 	:	alphanum
+token_h 	:	alphanum
 		|	'-'
 		|	'.'
 		|	'!'
@@ -241,14 +238,11 @@ token_hh 	:	alphanum
 
 /* rule separators unneeded  */
 
-word		:	word_h2 word_h
+word		:	word_h
+		|	word word_h
 		;	
-
-word_h		:	/* empty */
-		|	word_h word_h2
-		;
 		
-word_h2		:	alphanum
+word_h		:	alphanum
 		|	'-'
 		|	'.'
 		|	'!'
@@ -322,7 +316,7 @@ RDquot		:	SDQUOTE
 		|	SDQUOTE_LWS
 		;
 	
-comment		:	Lparen { SWITCHSTATE_COMMENT; } comment_hh Lparen { SWITCHSTATE_NORMAL; }
+comment		:	Lparen { SWITCHSTATE_COMMENT; } comment_hh Rparen { SWITCHSTATE_NORMAL; }
 		;
 
 comment_h	:	Lparen comment_hh Rparen
@@ -430,9 +424,7 @@ host		:	hostname
 		|	IPv4address
 		;
 
-hostname        :	toplabel
-		|	toplabel '.'
-		|	hostname_h toplabel
+hostname       	:	hostname_h toplabel
 		|	hostname_h toplabel '.'
 		; /* aBNF: *( domainlabel "." ) toplabel [ "." ] */
 		
@@ -570,9 +562,9 @@ hname_h		:	hnv_unreserved
 		|	escaped
 		;
 		
-hvalue		:	hvalue_h
+hvalue		:	/* empty */
 		|	hvalue hvalue_h	
-		; /* aBNF: 1*( hnv-unreserved / unreserved / escaped ) */
+		; /* aBNF: *( hnv-unreserved / unreserved / escaped ) */
 
 hvalue_h	:	hnv_unreserved
 		|	unreserved
@@ -710,13 +702,12 @@ srvr		:	/* empty */
 		|	userinfo '@' hostport
 		;
 		
-reg_name	:	reg_name_h2 reg_name_h
+reg_name	:	reg_name_h 
+		|	reg_name reg_name_h
+		; /* aBNF: 1*( unreserved / escaped / "$" / "," / ";" 
+		 		/ ":" / "@" / "&" / "=" / "+" ) */
 
-reg_name_h	:	/* empty */
-		|	reg_name_h reg_name_h2
-		;
-
-reg_name_h2	:	unreserved
+reg_name_h	:	unreserved
 		|	escaped
 		|	'$'
 		|	','
@@ -731,7 +722,7 @@ reg_name_h2	:	unreserved
 query		:	uric_star
 		;
 
-sip_version	: 	SIP '/' DIGIT '.' DIGIT 
+sip_version	: 	SIP '/' number '.' number 
 		;
 
 message_header	:	message_header_h CRLF 
@@ -805,7 +796,7 @@ status_line 	: 	sip_version SP status_code SP reason_phrase CRLF
 		|	error { SWITCHSTATE_NORMAL; yyclearin; yyerrok; if (EOM) YYACCEPT; }
 		;
 						
-status_code	: 	DIGIT DIGIT DIGIT
+status_code	: 	DIGIT DIGIT DIGIT /* <-- extension_code */
 		;
 
 reason_phrase	: 	{ SWITCHSTATE_RPHRASE; } reason_phrase_h { SWITCHSTATE_NORMAL; }
@@ -842,10 +833,8 @@ accept_param	:	generic_param // evtl. semantikcheck "q" EQUAL qvalue
 		;
 
 /* qvalue = ( "0" [ "." 0*3DIGIT ] ) / ( "1" [ "." 0*3("0") ] ) <-- obsolete */
-		
-generic_param	:	generic_param_h
 				
-generic_param_h :  	token
+generic_param 	:  	token
 		|	token Equal gen_value
 		;
 		
@@ -880,6 +869,7 @@ Accept_Language	:	ACCEPT_LANGUAGE_HC { SWITCHSTATE_START; } Accept_Language_h { 
 
 Accept_Language_h:	/* empty */
 		|	language Accept_Language_hh
+		;
 		
 Accept_Language_hh:	/* empty */
 		|	Accept_Language_hh Comma language
@@ -890,6 +880,7 @@ language	:	language_range language_h
 
 language_h	:	/* empty */
 		|	language_h Semi accept_param
+		;
 
 language_range	:	alpha1_8 language_range_h
 		|	'*' 
@@ -1208,6 +1199,8 @@ m_subtype	:	extension_token
 /* iana_token obsolete -> only used in m_subtype, extension_token just contains token*/
 		
 m_parameter	:	m_attribute Equal m_value
+		;
+
 m_attribute	:	token
 		;
 		
@@ -1218,7 +1211,7 @@ m_value		:	token
 CSeq		:	CSEQ_HC number Lws method
 		;
 		
-Date		:	DATE_HC { SWITCHSTATE_DATE; } sip_date { SWITCHSTATE_NORMAL };
+Date		:	DATE_HC { SWITCHSTATE_DATE; } sip_date { SWITCHSTATE_NORMAL; }
 		;
 		
 sip_date	:	rfc1123_date
@@ -1597,7 +1590,8 @@ ttl		:	DIGIT
 		; /* aBNF: ttl = 1*3DIGIT ; 0 to 255 */	
  
 Warning		:	WARNING_HC warning_value Warning_h
-
+		;
+		
 Warning_h	:	/* empty */
 		|	Warning_h Comma warning_value
 		; /* aBNF: *(COMMA warning-value) */
