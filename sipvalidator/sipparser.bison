@@ -1,5 +1,5 @@
 /* This file is part of SIP-Validator.
-   Copyright (C) 2003  Philippe Gèrard, Mario Schulz
+   Copyright (C) 2003  Philippe GÃ©rard, Mario Schulz
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -36,19 +36,23 @@
  
 /* ****** state-managing-macros ****** */
  extern int yy_start;
- #ifndef BEGIN
- #define BEGIN (yy_start) = 1 + 2 *
+ #ifndef BEGINB
+ #define BEGINB (yy_start) = 1 + 2 *
  #endif
  
- #define SWITCHSTATE_START 	BEGIN  0 
- #define SWITCHSTATE_NORMAL 	BEGIN  1 
- #define SWITCHSTATE_COMMENT 	BEGIN  2
- #define SWITCHSTATE_QSTRING 	BEGIN  3
- #define SWITCHSTATE_UTF8CH  	BEGIN  4
- #define SWITCHSTATE_DATE	BEGIN  5
- #define SWITCHSTATE_SIPVERSION BEGIN  6
- #define SWITCHSTATE_RPHRASE	BEGIN  7
-
+ #define SWITCHSTATE_START 	BEGINB   0 
+ #define SWITCHSTATE_NORMAL 	BEGINB   1 
+ #define SWITCHSTATE_COMMENT 	BEGINB   2
+ #define SWITCHSTATE_QSTRING 	BEGINB   3
+ #define SWITCHSTATE_UTF8CH  	BEGINB   4
+ #define SWITCHSTATE_DATE	BEGINB   5
+ #define SWITCHSTATE_SIPVERSION BEGINB   6
+ #define SWITCHSTATE_RPHRASE	BEGINB   7
+ #define SWITCHSTATE_WARNING	BEGINB   8
+ #define SWITCHSTATE_SRVRVAL    BEGINB   9
+ #define SWITCHSTATE_COMMENT2   BEGINB  10
+ #define SWITCHSTATE_DIGURI	BEGINB  11
+ 
 /* *** END OF state-managing-macros *** */
 
 /* lex variable */
@@ -97,7 +101,7 @@ void initParsing();
 
 	SIP  SIP_COLON SIPS_COLON TRANSPORTE USERE METHODE TTLE MADDRE
 
-	SP HTAB CRLF SEMI LWS LWSSQR
+	SP HTAB CRLF SEMI LWS LWSSQR LPAREN_SV RPAREN_C2
 	
 	STAR SLASH EQUAL LPAREN RPAREN RAQUOT COMMA SEMI COLON
  	
@@ -130,6 +134,7 @@ void initParsing();
 	
 	DURATION_E STALE_E_TRUE STALE_E_FALSE
 	
+	INVALID_CHAR
 	
 	/* special-state tokens */
 	 CTEXTH QDTEXTH QUOTED_PAIR UTF8_CONT
@@ -177,7 +182,7 @@ mark		:	'-'
 		|	')'
 		;
 
-escaped		:	'%' hexdig hexdig		
+escaped		:	'%' hexdig hexdig	
 		;
 				
 Lws		:	SP
@@ -587,8 +592,7 @@ sip_message_h	:	request
 		|	response
 		;
 			
-request		:	request_line CRLF
-		|	request_line message_header_plus CRLF
+request		:	request_line message_header_star CRLF;
 		;
 				
 request_line	:	method SP request_uri SP { SWITCHSTATE_SIPVERSION; } sip_version CRLF 
@@ -727,7 +731,7 @@ sip_version	: 	SIP '/' number '.' number
 
 message_header	:	message_header_h CRLF 
 				{ SWITCHSTATE_NORMAL; }
-		|	error 
+		|	error
 				{ SWITCHSTATE_NORMAL; yyclearin; yyerrok; if (EOM) YYACCEPT; }
 		;
 
@@ -778,17 +782,16 @@ message_header_h:	Accept
                 |  	extension_header
 		;
 		
-message_header_plus:	message_header
-		|	message_header_plus message_header
-		; /* aBNF: 1*(message_header) */
+message_header_star:	/* empty */
+		|	message_header_star message_header
+		; /* aBNF: *(message_header) */
 									
 method		:	token /* extension_method, INVITE ... -> evtl. Semcheck */
 		;
 
 /* extension_method:	token; <-- obsolete */
 										
-response	:	status_line CRLF 
-		|	status_line message_header_plus CRLF 
+response	:	status_line message_header_star CRLF 
 			/* [message_body] -> unnecessary */
 		;
 				
@@ -957,7 +960,7 @@ username	:	USERNAME_E username_value
 username_value	:	quoted_string
 		;
 		
-digest_uri	:	URI_E { SWITCHSTATE_START; } LDquot digest_uri_value RDquot
+digest_uri	:	URI_E { SWITCHSTATE_DIGURI; } LDquot digest_uri_value RDquot
 		;
 		
 digest_uri_value:	rquest_uri
@@ -1460,19 +1463,37 @@ Route_h		:	Comma route_param
 
 route_param	:	name_addr semi_rr_param_star
 		;
-		
-Server		:	SERVER_HC server_val
-		|	SERVER_HC server_val lws_server_val_plus
+
+/* to do -> what is if line ends with a comment and this comment ends with Lws ! */
+/* RPAREN can contain Lws at the end */
+Server		:	SERVER_HC { SWITCHSTATE_SRVRVAL; } server_val lws_server_val_star
 		;
 
 server_val	:	product
-		|	comment
+		|	comment_sv
+		|	Lws comment_sv
 		;
 		
-lws_server_val_plus:	Lws server_val
-		|	lws_server_val_plus Lws server_val
-		; /* aBNF: 1*(LWS server-val)*/
+lws_server_val_star:	/* empty */
+		|	Lws product lws_server_val_star
+		|	Lws comment_sv lws_server_val_star
+		|	Lws Lws comment_sv lws_server_val_star
+		; /* aBNF: *(LWS server-val)*/
+	
+/* modified version of rule comment to prevent Lws-catching in rule Server, ? */
+comment_sv	:	LPAREN_SV { SWITCHSTATE_COMMENT2; } comment_sv_hh RPAREN_C2 { SWITCHSTATE_SRVRVAL; }
+		;
 		
+comment_sv_h	:	Lparen comment_sv_hh RPAREN_C2
+		| 	Lparen comment_sv_hh RPAREN_C2 Lws
+		;
+		
+comment_sv_hh	:	/* empty */
+		|	comment_sv_hh ctext
+		|	comment_sv_hh QUOTED_PAIR
+		|	comment_sv_hh comment_sv_h
+		;		
+
 product		:	token
 		|	token Slash product_version
 		;
@@ -1523,9 +1544,9 @@ to_param	:	generic_param /* includes tag_param */
 Unsupported	:	UNSUPPORTED_HC option_tag comma_option_tag_star
 		;
 		
-	
+/* to do -> see rule Server */
 User_Agent	:	USER_AGENT_HC server_val
-		|	USER_AGENT_HC server_val lws_server_val_plus
+		|	USER_AGENT_HC server_val lws_server_val_star
 		;
 		 
 Via		:	VIA_HC via_parm
@@ -1596,7 +1617,7 @@ Warning_h	:	/* empty */
 		|	Warning_h Comma warning_value
 		; /* aBNF: *(COMMA warning-value) */
 		
-warning_value	:	warn_code SP warn_agent SP warn_text
+warning_value	:	{ SWITCHSTATE_WARNING; } warn_code SP warn_agent SP { SWITCHSTATE_NORMAL; } warn_text
 		;
 		
 warn_code	:	DIGIT DIGIT DIGIT
