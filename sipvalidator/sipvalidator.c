@@ -42,20 +42,13 @@
 #include <stdlib.h>
 #include "LoggerModul.h"
 
-/* usage-message of sipvalidator */
- void printUsage();
- 
-/* buffer for sipmessage */
- extern u_char* sipbuffer;
-
 /* syntax-error-stuff */ 
  extern char *synerrbufp;
  extern int numSynErrs;
  
-/* prepare Parser */
- extern int initParsing();
- 
- 
+/* usage-message of sipvalidator */
+ void printUsage();
+  
 main(int argc, char *args[]) {
 
 	/* initialization */
@@ -75,6 +68,8 @@ main(int argc, char *args[]) {
 	  int logvlevel;
           char* fileBufferp;
           int ctr;
+	  int cl;
+	  int i;
 
 	  int temp;
 	  FILE *file;
@@ -152,8 +147,7 @@ main(int argc, char *args[]) {
  			EXIT=1;
             		break;
             	case 'v':
-            	 /* version-info */
-            		printf("Sip-Validator-Version: 0.32a\n");
+            	 /* version-info (same like the help-message) */
             		EXIT=1;
             		break;
             	case 'b':
@@ -239,11 +233,14 @@ main(int argc, char *args[]) {
 				if (ch=='\n' && !temp) { fileBufferp[ctr]='\r'; ctr++; };
 				temp=0;
                           };
-			
-	  		  yy_scan_bytes(fileBufferp,ctr);
+	  		  
+			  yy_scan_bytes(fileBufferp,ctr);
 	   		
 			  initParsing();
 			  yyparse();
+			  
+			  CheckContentLength(fileBufferp,ctr);
+			  
 	   		  if (numSynErrs!=0) Log(synerrbufp,fileBufferp);
 			
 			} else {
@@ -267,6 +264,7 @@ main(int argc, char *args[]) {
 
 /* usage-message of sipvalidator */
 void printUsage() {
+	printf("Sip-Validator-Version: 0.4b\n");
 	printf("\nUSAGE:\n");
 	printf(" -d <device>    -- device to sniff on [default: eth0]\n");
 	printf(" -p <port>      -- device-port [default: 5060]\n");
