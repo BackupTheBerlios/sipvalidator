@@ -17,7 +17,7 @@
 */
 
 /* project: 	sipvalidator
- * file: 	sipparser.bison 
+ * file: 	sipparser.bison
  *
  * Grammar-Description for Bison to generate parser
  *
@@ -31,17 +31,17 @@
 
 /* yylval should be of type int */
  #define YYSTYPE int
- 
+
 // #define YYERROR_VERBOSE <-- don't use it, it's causing segfaults !!!
- 
+
 /* ****** state-managing-macros ****** */
  extern int yy_start;
  #ifndef BEGINB
  #define BEGINB (yy_start) = 1 + 2 *
  #endif
- 
- #define SWITCHSTATE_START 	BEGINB   0 
- #define SWITCHSTATE_NORMAL 	BEGINB   1 
+
+ #define SWITCHSTATE_START 	BEGINB   0
+ #define SWITCHSTATE_NORMAL 	BEGINB   1
  #define SWITCHSTATE_COMMENT 	BEGINB   2
  #define SWITCHSTATE_QSTRING 	BEGINB   3
  #define SWITCHSTATE_UTF8CH  	BEGINB   4
@@ -54,7 +54,7 @@
  #define SWITCHSTATE_DIGURI	BEGINB  11
  #define SWITCHSTATE_DOMAIN	BEGINB  12
  #define SWITCHSTATE_CL		BEGINB  13
- 
+
 /* *** END OF state-managing-macros *** */
 
 /* lex variable */
@@ -63,17 +63,17 @@
  extern int yylineno;
 
 /* Content-Length-stuff */
- char	cl_set; // flag, set if Content-Length-Header occured 
+ char	cl_set; // flag, set if Content-Length-Header occured
  int	cl_parsed; // parsed value for Content-Length
- 
+
 /* End of message flag */
- char EOM=0; 
- 
+ char EOM=0;
+
 /* End of Buffer */
  #define EOB 0
 
 
- 
+
 /* ********** syntax-error-stuff ********** */
 
  #define SYNERRBUFSIZE 10240
@@ -81,11 +81,11 @@
  char *synerrbufp; // points to begin of synerrbuffer
  char *errbufp; // points to one after the last entry
  int synerrbuf_left;
- 
+
  int numSynErrs=0;
  void logerrmsg(char* errmsg);
  void logBadContentLength();
- int yyerror(char *s); 
+ int yyerror(char *s);
  void resetSynerrbuf();
 
 /* ******* END OF syntax-error-stuff ****** */
@@ -93,8 +93,8 @@
 /* declaration of predicate-methods */
  int isHexdig();
  int isLHexdig();
- 
-/* prepare parsing-method */ 
+
+/* prepare parsing-method */
 void initParsing();
 
 %}
@@ -108,61 +108,61 @@ void initParsing();
 	SIP  SIP_COLON SIPS_COLON TRANSPORTE USERE METHODE TTLE MADDRE
 
 	SP HTAB CR LF SEMI LWS LWSSQR LPAREN_SV RPAREN_C2 COMMA_SP
-	
+
 	SLASH EQUAL LPAREN RPAREN RAQUOT COMMA SEMI COLON
- 	
+
 	SDQUOTE LWS_SDQUOTE SDQUOTE_LWS SBSLASH SHCOMMA
-	
+
 	/* message-header-names */
- 	 ACCEPT_HC ACCEPT_ENCODING_HC ACCEPT_LANGUAGE_HC ALERT_INFO_HC ALLOW_HC 
+ 	 ACCEPT_HC ACCEPT_ENCODING_HC ACCEPT_LANGUAGE_HC ALERT_INFO_HC ALLOW_HC
  	 AUTHENTICATION_INFO_HC
  	 AUTHORIZATION_HC CALL_ID_HC CALL_INFO_HC CONTACT_HC CONTENT_DISPOSITION_HC
  	 CONTENT_ENCODING_HC
- 	 CONTENT_LANGUAGE_HC CONTENT_LENGTH_HC CONTENT_TYPE_HC CSEQ_HC DATE_HC 
+ 	 CONTENT_LANGUAGE_HC CONTENT_LENGTH_HC CONTENT_TYPE_HC CSEQ_HC DATE_HC
  	 ERROR_INFO_HC EXPIRES_HC
  	 FROM_HC IN_REPLY_TO_HC MAX_FORWARDS_HC MIME_VERSION_HC MIN_EXPIRES_HC
  	 ORGANIZATION_HC
  	 PRIORITY_HC PROXY_AUTHENTICATE_HC PROXY_AUTHORIZATION_HC PROXY_REQUIRE_HC
- 	 RECORD_ROUTE_HC 
+ 	 RECORD_ROUTE_HC
  	 REPLY_TO_HC REQUIRE_HC RETRY_AFTER_HC ROUTE_HC SERVER_HC SUBJECT_HC
- 	 SUPPORTED_HC TIMESTAMP_HC 
+ 	 SUPPORTED_HC TIMESTAMP_HC
  	 TO_HC UNSUPPORTED_HC USER_AGENT_HC VIA_HC WARNING_HC WWW_AUTHENTICATE_HC
  	 HEADER_NAME_HC
- 	
- 	DIGEST_LWS 
-	
+
+ 	DIGEST_LWS
+
 	USERNAME_E URI_E
-	
+
 	CNONCE_E NC_E RESPONSE_E  NEXTNONCE_E RSPAUTH_E
- 	PURPOSE_E HANDLING_E 
-	REALM_E DOMAIN_E NONCE_E OPAQUE_E ALGORITHM_E  
+ 	PURPOSE_E HANDLING_E
+	REALM_E DOMAIN_E NONCE_E OPAQUE_E ALGORITHM_E
 	TTL_E MADDR_E RECEIVED_E BRANCH_E QOP_E
-	
+
 	DURATION_E STALE_E_TRUE STALE_E_FALSE
-	
+
 	INVALID_CHAR
-	
+
 	/* special-state tokens */
 	 CTEXTH QDTEXTH QUOTED_PAIR UTF8_CONT
 	 x21_7E xC0_DF xE0_EF xF0_F7 xF8_Fb xFC_FD
-	 
+
 	 /* state date */
  	  GMT
 	  MON TUE WED THU FRI SAT SUN
-          JAN FEB MAR APR MAY JUN JUL AUG SEP OCT NOV DEC 
+          JAN FEB MAR APR MAY JUN JUL AUG SEP OCT NOV DEC
 
  /* dynamic rule precedence to solve reduce/reduce conflicts */
-	  
+
 %%
 
 alphanum	:	ALPHA
 		|	DIGIT
 		;
-		
+
 hexdig		:	ALPHA { if (!isHexdig())logerrmsg("no hexdigit"); }
 		|	DIGIT
 		; /* aBNF: DIGIT / "A" / "B" / "C" / "D" / "E" / "F" */
-	
+
 reserved	:	';'
 		|	'/'
 		|	'?'
@@ -174,11 +174,11 @@ reserved	:	';'
                 |	'$'
                 |	','
                 ;
-                     
+
 unreserved	:	alphanum
-		|	mark	
+		|	mark
 		;
-		
+
 mark		:	'-'
 		|	'_'
 		|	'.'
@@ -190,34 +190,34 @@ mark		:	'-'
 		|	')'
 		;
 
-escaped		:	'%' hexdig hexdig	
+escaped		:	'%' hexdig hexdig
 		;
-				
+
 Lws		:	SP
 		|	HTAB
 		|	LWS
 		;
-		
+
  /* Sws unused due rule-transformations */
 
  /* HColon is not needed anymore cause of catching it with lexer */
- 		
+
 text_utf8_trim	:  	text_utf8char_plus text_utf8_trim_h
-		;  /* aBNF: TEXT_UTF8_TRIM  =  1*TEXT_UTF8char *(1*LWS TEXT_UTF8char) 
+		;  /* aBNF: TEXT_UTF8_TRIM  =  1*TEXT_UTF8char *(1*LWS TEXT_UTF8char)
 							! changed due to ambiguity ! */
- 
+
 text_utf8_trim_h: 	/* empty */
-		|	text_utf8_trim_h lws_plus text_utf8char
+		|	text_utf8_trim_h lws_plus text_utf8char_plus
 		;
 
 lws_plus	:	Lws
 		|	lws_plus Lws
 		;
-			
+
 text_utf8char	:	x21_7E
 		|	utf8_nonascii
 		;
-		
+
 text_utf8char_plus:	text_utf8char
 		|	text_utf8char_plus text_utf8char
 		;
@@ -228,15 +228,15 @@ utf8_nonascii	:	xC0_DF UTF8_CONT
 		|	xF8_Fb UTF8_CONT UTF8_CONT UTF8_CONT UTF8_CONT
 		|	xFC_FD UTF8_CONT UTF8_CONT UTF8_CONT UTF8_CONT UTF8_CONT
 		;
-		
+
 lhex		:	ALPHA { if(!isLHexdig())logerrmsg("no lhexdigit(0-9,a-f)"); }
 		|	DIGIT
 		; /* aBNF: DIGIT / %x61-%x66 ; a-f */
-	
+
 token		:	 token_h
 		|	 token token_h
 		;
-					
+
 token_h 	:	alphanum
 		|	'-'
 		|	'.'
@@ -254,8 +254,8 @@ token_h 	:	alphanum
 
 word		:	word_h
 		|	word word_h
-		;	
-		
+		;
+
 word_h		:	alphanum
 		|	'-'
 		|	'.'
@@ -287,27 +287,27 @@ Star    	:	'*'
 		|	'*' Lws
 		|	Lws '*' Lws
 		;
-		
+
 Slash   	:	'/'
 		|	SLASH
 		;
-		
+
 Equal		:	'='
-		|	EQUAL		
+		|	EQUAL
 		;
 
 Lparen  	:	'('
 		|	LPAREN
 		;
-		
+
 Rparen  	:	')'
 		|	RPAREN
 		;
-		
+
 Raquot		: 	'>'
 		|	RAQUOT
-		;		
-		
+		;
+
 Laquot		: 	'<'
 		|	Lws '<'
 		;
@@ -315,7 +315,7 @@ Laquot		: 	'<'
 Comma   	:  	','
 		|	COMMA
 		;
-		
+
 Semi		:	';'
 		|	SEMI
 		;
@@ -323,7 +323,7 @@ Semi		:	';'
 Colon		:	':'
 		|	COLON
 		;
-		
+
 LDquot		:	SDQUOTE
 		|	LWS_SDQUOTE
 		;
@@ -331,13 +331,13 @@ LDquot		:	SDQUOTE
 RDquot		:	SDQUOTE
 		|	SDQUOTE_LWS
 		;
-	
+
 comment		:	Lparen { SWITCHSTATE_COMMENT; } comment_hh Rparen { SWITCHSTATE_NORMAL; }
 		;
 
 comment_h	:	Lparen comment_hh Rparen
 		;
-		
+
 comment_hh	:	/* empty */
 		|	comment_hh ctext
 		|	comment_hh QUOTED_PAIR
@@ -348,26 +348,26 @@ ctext		:	CTEXTH /* %x21-27 / %x2A-5B / %x5D-7E */
 		|	utf8_nonascii
 		|	Lws
 		;
-	                  
-quoted_string	:	SDQUOTE { SWITCHSTATE_QSTRING; } quoted_string_h { SWITCHSTATE_NORMAL; } 
+
+quoted_string	:	SDQUOTE { SWITCHSTATE_QSTRING; } quoted_string_h { SWITCHSTATE_NORMAL; }
 		|	LWS_SDQUOTE { SWITCHSTATE_QSTRING; } quoted_string_h { SWITCHSTATE_NORMAL; }
 		; /* aBNF: SWS DQUOTE *(qdtext / quoted-pair ) DQUOTE */
 
 /* to solve ... [Lws] [Lws] ... ambiguity (problematic was: X Lws Y) */
-quoted_string_lwssqr:	SDQUOTE { SWITCHSTATE_QSTRING; } quoted_string_h { SWITCHSTATE_NORMAL; } 
+quoted_string_lwssqr:	SDQUOTE { SWITCHSTATE_QSTRING; } quoted_string_h { SWITCHSTATE_NORMAL; }
 		|	LWSSQR SDQUOTE { SWITCHSTATE_QSTRING; } quoted_string_h { SWITCHSTATE_NORMAL; }
 		; /* aBNF: SWS DQUOTE *(qdtext / quoted-pair ) DQUOTE */
 
 quoted_string_h	:	quoted_string_hh SDQUOTE
 		;
-		
+
 quoted_string_hh:	/* empty */
 		|	quoted_string_hh qdtext
 		|	quoted_string_hh QUOTED_PAIR
-		|	quoted_string_hh SEMI 
+		|	quoted_string_hh SEMI
 		|	quoted_string_hh COMMA
 		; /* SEMI and COMMA added, cause it's recognized as token in qstring-state */
-		
+
 qdtext		:	Lws
 		|	QDTEXTH	/* %x21 / %x23-5B / %x5D-7E */
 		|	utf8_nonascii
@@ -395,16 +395,16 @@ userinfo        :	user '@'
 		|	user ':' password '@'
 		/* Telephone-Subscriber rules are syntactically included in the user-rule cause
 		   all characters that aren't allowed in the user-rule have to be escaped and
-		   escaping is allowed in the user-rule !!! 
+		   escaping is allowed in the user-rule !!!
 		|	telephone_subscriber '@'
-		|	telephone_subscriber ':' password '@'			
+		|	telephone_subscriber ':' password '@'
 		*/
 		;
-		
+
 user		:  	user_h
 		|	user user_h
 		; /* aBNF: 1*( unreserved / escaped / user-unreserved ) */
-		
+
 user_h		:	unreserved
 		|	escaped
 		|	user_unreserved
@@ -417,13 +417,13 @@ user_unreserved	:	'&'
 		|	','
 		|	';'
 		|	'?'
-		|	'/'		
+		|	'/'
 		;
 
 password	:	/* empty */
 		|	password password_h
 		; /* aBNF: *( unreserved / escaped / "&" / "=" / "+" / "$" / "," ) */
-                    	     
+
 password_h	:	unreserved
 		|	escaped
 		|	'&'
@@ -434,7 +434,7 @@ password_h	:	unreserved
 		;
 
 hostport	:	host
-		|	host ':' port 
+		|	host ':' port
 		;
 
 host		:	hostname
@@ -445,46 +445,46 @@ host		:	hostname
 hostname       	:	hostname_h toplabel
 		|	hostname_h toplabel '.'
 		; /* aBNF: *( domainlabel "." ) toplabel [ "." ] */
-		
+
 hostname_h	:	/* empty */
 		|	hostname_h domainlabel '.'
 		;
-		
+
 domainlabel	:	alphanum
 		|	alphanum label_h alphanum
 		; /* aBNF: alphanum / alphanum *( alphanum / "-" ) alphanum */
-		
+
 toplabel	:	ALPHA
 		|	ALPHA label_h alphanum
 		; /* aBNF: ALPHA / ALPHA *( alphanum / "-" ) alphanum */
 
-label_h		:	/* empty */	
+label_h		:	/* empty */
 		|	label_h alphanum
 		|	label_h '-'
-		;	
-		
+		;
+
 IPv4address	:	digit1_3 '.' digit1_3 '.' digit1_3 '.' digit1_3
 		; /* aBNF: 1*3DIGIT "." 1*3DIGIT "." 1*3DIGIT "." 1*3DIGIT */
-	
+
 digit1_3	:	DIGIT
 		|	DIGIT DIGIT
 		|	DIGIT DIGIT DIGIT
 		;
-	
+
 IPv6reference	:	'[' IPv6address ']'
 		;
-		
+
 IPv6address     :	hexpart
 		|	hexpart ':' IPv4address
 		;
-	
+
 hexpart		:	hexseq
 		|	hexseq ':' ':'
 		|	hexseq ':' ':' hexseq
-		|	':' ':' 
+		|	':' ':'
 		|	':' ':' hexseq
 		;
-	
+
 hexseq		:	hex4
 		|	hexseq ':' hex4
 		;
@@ -494,7 +494,7 @@ hex4		:	hexdig
 		|	hexdig hexdig hexdig
 		|	hexdig hexdig hexdig hexdig
 		;
-		
+
 port 		:	number
 		; /* aBNF port = 1*DIGIT */
 
@@ -503,9 +503,9 @@ port 		:	number
 uri_parameters	:	/* empty */
 		|	uri_parameters ';' { SWITCHSTATE_NORMAL; } uri_parameter
 		;
-		
+
 uri_parameter	:	transport_param
-		|	user_param 
+		|	user_param
 		| 	method_param
                 |	ttl_param
               	|	maddr_param
@@ -514,30 +514,30 @@ uri_parameter	:	transport_param
 
 transport_param	:	TRANSPORTE { SWITCHSTATE_START; } token
                 ; /* aBNF: "transport=" ( "udp" / "tcp" / "sctp" / "tls" / other_transport) */
-                
-/* other_transport=token obsolete */ 
-                    
+
+/* other_transport=token obsolete */
+
 user_param	:	USERE { SWITCHSTATE_START; } token
 		; /* aBNF: "user=" ( "phone" / "ip" / other-user) */
-		
-/* other_user = token obsolete */ 
-              	
+
+/* other_user = token obsolete */
+
 method_param	:	METHODE { SWITCHSTATE_START; } method
 		;
-		
+
 ttl_param       :	TTLE { SWITCHSTATE_START; } ttl
 		;
-		
+
 maddr_param     :	MADDRE { SWITCHSTATE_START; } host
 		;
-		
+
 /* lr_param "lr" <-- obsolete */
 		;
-		
+
 other_param	:	pname
 		|	pname '=' pvalue
 		; /* aBNF: other_param = pname [ "=" pvalue  ] */
-		
+
 /* rules with SIP_COLON and SIPS_COLON have been added to avoid
  * conflicts when these tokens occur in pname
 **/
@@ -548,40 +548,40 @@ pname		:	paramchar
 		|	pname SIP_COLON { SWITCHSTATE_START; }
 		|	pname SIPS_COLON { SWITCHSTATE_START; }
 		;
-		
+
 pvalue		:	paramchar
 		|	pvalue paramchar
 		;
-		
+
 paramchar	:	param_unreserved
 		|	unreserved
 		|	escaped
 		;
-		
+
 param_unreserved:	'[' | ']' | '/' | ':' | '&' | '+' | '$'
 		;
 
 headers         :  	'?' header headers_h
 		;
-		
+
 headers_h	:	/* empty */
 		|	headers_h '&' header
 		;
-				
+
 header          :	hname '=' hvalue
 		;
-		
+
 hname		:	hname_h
-		|	hname hname_h	
+		|	hname hname_h
 		; /* aBNF: 1*( hnv-unreserved / unreserved / escaped ) */
-		
+
 hname_h		:	hnv_unreserved
 		|	unreserved
 		|	escaped
 		;
-		
+
 hvalue		:	/* empty */
-		|	hvalue hvalue_h	
+		|	hvalue hvalue_h
 		; /* aBNF: *( hnv-unreserved / unreserved / escaped ) */
 
 hvalue_h	:	hnv_unreserved
@@ -601,34 +601,34 @@ hnv_unreserved	:	'['
 sip_message	:	sip_message_h { YYACCEPT; }
 		;
 
-sip_message_h	:	request  
+sip_message_h	:	request
 		|	response
 		;
-			
+
 request		:	request_line message_header_star CR LF;
 		;
-				
-request_line	:	method SP request_uri SP { SWITCHSTATE_SIPVERSION; } sip_version CR LF 
+
+request_line	:	method SP request_uri SP { SWITCHSTATE_SIPVERSION; } sip_version CR LF
 				{ SWITCHSTATE_NORMAL; }
 		; /* errors caught by status-line */
-					
-request_uri	:	sip_uri  
+
+request_uri	:	sip_uri
 		|	sips_uri
 		|	absoluteUri
 		;
-		
+
 absoluteUri	:	scheme ':' { SWITCHSTATE_START; } absoluteUri_h { SWITCHSTATE_NORMAL; }
-		;		
+		;
 
 /* added to solve problem with domain (SPACES; Lws after RDQuot -> states) */
 absoluteUri_domain:	scheme ':' absoluteUri_h
 		;
-		
+
 absoluteUri_h	:	hier_part
 		|	opaque_part
 		;
 
-/* ! rules hier-part, authority, srvr changed to solve ambiguity-conflict ! */			
+/* ! rules hier-part, authority, srvr changed to solve ambiguity-conflict ! */
 hier_part       :       ready_path
                 |       ready_path '?' query
                 ;
@@ -636,22 +636,22 @@ hier_part       :       ready_path
 ready_path      :       '/' authority
                 |       '/' '/' authority
                 ;
-			
+
 abs_path	:	'/' path_segments
 		;
 
 opaque_part	:	uric_no_slash uric_star
 		;
-		
+
 uric		:	reserved
 		|	unreserved
 		|	escaped
 		;
-		
+
 uric_star	:	/* empty */
 		|	uric_star uric
 		; /* aBNF: *uric */
-		
+
 uric_no_slash	:	unreserved
 		|	escaped
 		|	';'
@@ -671,10 +671,10 @@ path_segments	:	segment path_segments_h
 path_segments_h	:	/* empty */
 		|	path_segments_h '/' segment
 		; /* aBNF: *( "/" segment ) */
-		
+
 segment		:	pchar_star segment_h
 		;
-		
+
 segment_h	:	/* empty */
 		|	segment_h ';' param
 		;
@@ -692,27 +692,27 @@ pchar		:	unreserved
 		|	'$'
 		|	','
 		;
-		
+
 pchar_star	:	/* empty */
 		|	pchar_star pchar
 		; /* aBNF: *pchar */
 
 scheme		:	ALPHA
 		|	ALPHA scheme_h
-		;		
+		;
 
 scheme_h	:	scheme_hh
 		|	scheme_h scheme_hh
 		;
-	
+
 scheme_hh	:	ALPHA
 		|	DIGIT
 		|	'+'
 		|	'-'
 		|	'.'
 		;
-		
-/* ! rules hier-part, authority, srvr changed to solve ambiguity-conflict ! */			
+
+/* ! rules hier-part, authority, srvr changed to solve ambiguity-conflict ! */
 authority	:	srvr
 		;
 
@@ -723,17 +723,17 @@ srvr		:	/* empty */
 
 hilf_reg        :       reg_name '/' hilf_reg1    /* wenn / dann 2 mal @ alle anderen Faelle ueber reg_name mgl. */
                 ;
-		
+
 hilf_reg1       :	/* empty */
                 |       '/'
                 |       hilf_reg
                 |       reg_name
-                ;		
-		
-				
+                ;
+
+
 reg_name	:	reg_name_h
 		|	reg_name reg_name_h
-		; /* aBNF: 1*( unreserved / escaped / "$" / "," / ";" 
+		; /* aBNF: 1*( unreserved / escaped / "$" / "," / ";"
 		 		/ ":" / "@" / "&" / "=" / "+" ) */
 
 reg_name_h	:	unreserved
@@ -747,14 +747,14 @@ reg_name_h	:	unreserved
 		|	'='
 		|	'+'
 		;
-                  
+
 query		:	uric_star
 		;
 
-sip_version	: 	SIP '/' number '.' number 
+sip_version	: 	SIP '/' number '.' number
 		;
 
-message_header	:	message_header_h CR LF 
+message_header	:	message_header_h CR LF
 				{ SWITCHSTATE_NORMAL; }
 		|	error
 				{ SWITCHSTATE_NORMAL; yyclearin; yyerrok; if (EOM) YYACCEPT; }
@@ -806,31 +806,31 @@ message_header_h:	Accept
                 |  	WWW_Authenticate
                 |  	extension_header
 		;
-		
+
 message_header_star:	/* empty */
 		|	message_header_star message_header
 		; /* aBNF: *(message_header) */
-									
+
 method		:	token /* extension_method, INVITE ... -> evtl. Semcheck */
 		;
 
 /* extension_method:	token; <-- obsolete */
-										
-response	:	status_line message_header_star CR LF 
+
+response	:	status_line message_header_star CR LF
 			/* [message_body] -> unnecessary */
 		;
-				
+
 status_line 	: 	sip_version SP status_code SP reason_phrase CR LF
 		|	error { SWITCHSTATE_NORMAL; yyclearin; yyerrok; if (EOM) YYACCEPT; }
 		;
-						
+
 status_code	: 	DIGIT DIGIT DIGIT /* <-- extension_code */
 		;
 
 reason_phrase	: 	{ SWITCHSTATE_RPHRASE; } reason_phrase_h { SWITCHSTATE_NORMAL; }
 		;
-		
-		
+
+
 reason_phrase_h	:	/* empty */
 		|	reason_phrase_h reserved
 		|	reason_phrase_h unreserved
@@ -840,21 +840,21 @@ reason_phrase_h	:	/* empty */
 		|	reason_phrase_h SP
 		|	reason_phrase_h HTAB
 		;
-					
-Accept		: 	ACCEPT_HC 
-		|	ACCEPT_HC accept_range Accept_h	
-		;			
+
+Accept		: 	ACCEPT_HC
+		|	ACCEPT_HC accept_range Accept_h
+		;
 
 Accept_h	:	/* empty */
 		|	Accept_h Comma accept_range
 		;
-		
+
 accept_range	:	token '/' token accept_range_h
 		;
 
 accept_range_h	:	/* empty */
 		|	accept_range_h Semi generic_param
-		; 
+		;
 
 /* used by rule encoding, language */
 accept_param	:	generic_param // evtl. semantikcheck "q" EQUAL qvalue
@@ -865,7 +865,7 @@ accept_param	:	generic_param // evtl. semantikcheck "q" EQUAL qvalue
 generic_param 	:  	token
 		|	token Equal gen_value
 		;
-		
+
 gen_value	:  	token
 		|	IPv6reference  /* hostname&IPv4address from host included in token */
 		|	quoted_string_lwssqr
@@ -878,7 +878,7 @@ Accept_Encoding	:	ACCEPT_ENCODING_HC
 Accept_Encoding_h:	/* empty */
 		|	Accept_Encoding_h Comma encoding
 		;
-		
+
 encoding	:	codings encoding_h
 		;
 
@@ -888,7 +888,7 @@ encoding_h	:	/* empty */
 
 codings		:	content_coding /* '*' -> just included in token */
 		; /* aBNF: codings =  content-coding / "*" */
-		
+
 content_coding	:	token
 		;
 
@@ -898,11 +898,11 @@ Accept_Language	:	ACCEPT_LANGUAGE_HC { SWITCHSTATE_START; } Accept_Language_h { 
 Accept_Language_h:	/* empty */
 		|	language Accept_Language_hh
 		;
-		
+
 Accept_Language_hh:	/* empty */
 		|	Accept_Language_hh Comma language
 		;
-                     
+
 language	:	language_range language_h
 		;
 
@@ -911,7 +911,7 @@ language_h	:	/* empty */
 		;
 
 language_range	:	alpha1_8 language_range_h
-		|	'*' 
+		|	'*'
 		;
 
 language_range_h:	/* empty */
@@ -931,8 +931,8 @@ alpha1_8	:	ALPHA
 
 Alert_Info	:	ALERT_INFO_HC alert_param Alert_Info_h
 		;
-		
-Alert_Info_h	:	/* empty */ 
+
+Alert_Info_h	:	/* empty */
 		|	Alert_Info_h Comma alert_param
 		; /* aBNF: *(COMMA alert-param) */
 
@@ -947,29 +947,29 @@ alert_param_h	:	/* empty */
 Allow		:	ALLOW_HC
 		|	ALLOW_HC method Allow_h
 		;
-		
+
 Allow_h		:	/* empty */
 		|	Allow_h Comma method
 		; /* aBNF: *(COMMA Method) */
 
 Authorization	:	AUTHORIZATION_HC credentials
 		;
-		
+
 credentials	:	DIGEST_LWS digest_response
 		|	other_response
 		;
 
-digest_response	:	dig_resp digest_response_h 
+digest_response	:	dig_resp digest_response_h
 		;
 
 digest_response_h:	/* empty */
-		|	digest_response_h Comma dig_resp	
+		|	digest_response_h Comma dig_resp
 		; /* aBNF: *(COMMA dig-resp) */
 
 dig_resp	:	username
 		|	realm
 		|	nonce
-		|	digest_uri	
+		|	digest_uri
 		|	dresponse
 		|	algorithm
 		|	cnonce
@@ -981,21 +981,21 @@ dig_resp	:	username
 
 username	:	USERNAME_E username_value
 		;
-		
+
 username_value	:	quoted_string
 		;
-		
+
 digest_uri	:	URI_E { SWITCHSTATE_DIGURI; } LDquot digest_uri_value RDquot { SWITCHSTATE_NORMAL; }
 		;
-		
+
 digest_uri_value:	rquest_uri
 		;
 
 /*  ###  Request Uri  ### */
-rquest_uri     	: 	"*" 
+rquest_uri     	: 	"*"
 		| 	scheme ':' pchar_star rquest_uri_h
 		| 	abs_path
-		;	
+		;
 
 rquest_uri_h    :       /*empty*/
                 |       rquest_uri_h ';' pchar_star
@@ -1006,65 +1006,65 @@ message_qop	:	QOP_E qop_value
 
 cnonce		:	CNONCE_E cnonce_value
 		;
-		
+
 cnonce_value	:	nonce_value
 		;
-		
+
 nonce_count	:	NC_E nc_value
 		;
-		
+
 nc_value	:	lhex lhex lhex lhex lhex lhex lhex lhex
 		;
-		
+
 dresponse	:	RESPONSE_E request_digest
 		;
-		
+
 request_digest	:	LDquot request_digest_h RDquot
 		; /* aBNF: LDQUOT 32LHEX RDQUOT */
 
 request_digest_h:	request_digest_hh request_digest_hh request_digest_hh request_digest_hh
 		;
-		
+
 request_digest_hh:	lhex lhex lhex lhex lhex lhex lhex lhex
 		;
 
 auth_param	:	auth_param_name Equal token
 		|	auth_param_name Equal quoted_string_lwssqr
 		;
-		
+
 comma_auth_param_star:	/* empty */
                 |	comma_auth_param_star Comma auth_param
                 ; /* aBNF: *(COMMA auth-param) */
-      
+
 auth_param_name	:	token
 		;
-		
+
 other_response	:	auth_scheme Lws auth_param comma_auth_param_star
 		;
-                     
+
 auth_scheme	:	token
 		;
 
-Authentication_Info:	AUTHENTICATION_INFO_HC ainfo Authentication_Info_h 
-         	;               
+Authentication_Info:	AUTHENTICATION_INFO_HC ainfo Authentication_Info_h
+         	;
 
 Authentication_Info_h:	/* empty */
 		|	Authentication_Info_h Comma ainfo
 		; /* aBNF: *(COMMA ainfo) */
-		
+
 ainfo		:	nextnonce
 		|	message_qop
 		|	response_auth
 		|	cnonce
 		|	nonce_count
 		;
-		
+
 nextnonce	:	NEXTNONCE_E nonce_value
 		;
-		
+
 response_auth	:	RSPAUTH_E response_digest
 		;
-		
+
 response_digest	:	LDquot RDquot
 		|	LDquot response_digest_h RDquot
 		; /* LDQUOT *LHEX  RDQUOT */
@@ -1082,12 +1082,12 @@ callid		:	word
 
 Call_Info	:	CALL_INFO_HC info Call_Info_h
 		;
-		
+
 Call_Info_h	:	/* empty */
 		|	Call_Info_h Comma info
 		; /* aBNF: *(COMMA info) */
-		
-info		:	Laquot absoluteUri Raquot info_h 
+
+info		:	Laquot absoluteUri Raquot info_h
 		;
 
 info_h		:	/* empty */
@@ -1097,7 +1097,7 @@ info_h		:	/* empty */
 info_param	: 	PURPOSE_E token  /* <-- "icon" | "info" | "card" | token */
 		|	generic_param
 		;
-		
+
 Contact		: 	CONTACT_HC Star
 		|	CONTACT_HC contact_param Contact_h
 		;
@@ -1106,10 +1106,10 @@ Contact_h	:	/* empty */
 		|	Contact_h Comma contact_param
 		; /* aBNF: *(COMMA contact_param) */
 
-contact_param	:	name_addr contact_param_h 
+contact_param	:	name_addr contact_param_h
 		|	addr_spec contact_param_h
 		;
-		
+
 contact_param_h	:	/* empty */
 		|	contact_param_h Semi contact_params
 		;	/* aBNF: *(SEMI contact-params) */
@@ -1117,7 +1117,7 @@ contact_param_h	:	/* empty */
 name_addr	:	display_name Laquot addr_spec Raquot
 		| 	Laquot addr_spec Raquot
 		;
-		
+
 addr_spec	:	sip_uri
 		|	sips_uri
 		|	absoluteUri
@@ -1126,22 +1126,22 @@ addr_spec	:	sip_uri
 display_name	:	display_name_h
 		|	quoted_string
 		; /* aBNF: 1*(token LWS)/quoted-string */
-		
+
 display_name_h	:	token Lws
 		|	display_name_h token Lws
 		; /* aBNF: 1*(token LWS) */
-		
+
 contact_params	:	generic_param /* evtl. semanticcheck for c_p_q, c_p_expires */
                 |       USERE token
 		; /* aBNF: contact-params =  c-p-q/c-p-expires/contact-extension */
-		
-/* 
+
+/*
 // obsolete:
-c_p_q		:	'q' Equal qvalue;		
+c_p_q		:	'q' Equal qvalue;
 c_p_expires	:	EXPIRES_E delta_seconds;
 contact_extension:	generic_param;
 */
-		
+
 delta_seconds	:	number
 		; /* aBNF: 1*DIGIT */
 
@@ -1152,26 +1152,26 @@ Content_Disposition_h:	/* empty */
 		|	Content_Disposition_h Semi disp_param
 		; /* aBNF: *( SEMI disp-param ) */
 
-disp_type	:	token 
+disp_type	:	token
                 	/* "render" | "session" | "icon" | "alert" | disp_extension_token */
                	;
-               	 
+
 disp_param	:	handling_param
 		|	generic_param
 		;
 
-handling_param	:	HANDLING_E token 
+handling_param	:	HANDLING_E token
 			/* "optional" "required" other_handling */
 		;
-		
+
 /* other_handling = token <-- obsolete */
-		
+
 /* disp_extension_token = token <-- obsolete */
 		;
 
 Content_Encoding:	CONTENT_ENCODING_HC content_coding Content_Encoding_h
 		;
-		
+
 Content_Encoding_h:	/* empty */
 		|	Content_Encoding_h Comma content_coding
 		; /* aBNF: *(COMMA content-coding) */
@@ -1378,33 +1378,33 @@ Min_Expires	:	MIN_EXPIRES_HC delta_seconds
 
 Organization	:	ORGANIZATION_HC { SWITCHSTATE_UTF8CH; } Organization_h { SWITCHSTATE_NORMAL; }
 		;
-		
+
 Organization_h	:	/* empty */
 		|	text_utf8_trim
 		;
 
 Priority	:	PRIORITY_HC priority_value
 		;
-		
-priority_value	:	token  
+
+priority_value	:	token
 		; /* aBNF: "emergency" / "urgent" / "normal" / "non-urgent" / other-priority */
 
 /* other_priority = token <-- obsolete */
-		
+
 Proxy_Authenticate:	PROXY_AUTHENTICATE_HC challenge
 		;
 
 challenge	:	DIGEST_LWS digest_cln challenge_h
 		|	other_challenge
 		;
-		
+
 challenge_h	:	/* empty */
 		|	challenge_h Comma digest_cln
 		; /* aBNF: *(COMMA digest-cln) */
 
 other_challenge	:	auth_scheme Lws auth_param comma_auth_param_star
 		;
-		
+
 digest_cln	:	realm
 		|	domain
 		|	nonce
@@ -1414,45 +1414,45 @@ digest_cln	:	realm
 		|	qop_options
 		|	auth_param
 		;
-		
+
 realm		:	REALM_E realm_value
 		;
-		
+
 realm_value	:	quoted_string
 		;
-		
+
 domain		:	DOMAIN_E { SWITCHSTATE_DOMAIN; } LDquot uri_domain domain_h RDquot { SWITCHSTATE_NORMAL; }
 		;
 
 domain_h	:	/* empty */
 		|	domain_h domain_hh uri_domain
 		; /* aBNF: *( 1*SP uri ) */
-		
-domain_hh	:	SP	
+
+domain_hh	:	SP
 		|	domain_hh SP
 		; /* aBNF: 1*SP */
-		
+
 /* uri->uri_domain, changed to solve problem with domain (SPACES,Lws after RDQuot->states) */
 uri_domain		:	absoluteUri_domain
 		|	abs_path
 		;
-		
+
 nonce		:	NONCE_E nonce_value
 		;
-		
+
 nonce_value	:	quoted_string
 		;
-		
+
 opaque		:	OPAQUE_E quoted_string
 		;
-		
+
 stale		:	STALE_E_TRUE
 		|	STALE_E_FALSE
 		;
 
 algorithm	:	ALGORITHM_E token
 		; /* aBNF: "md5" | "md5_sess" | token */
-		
+
 qop_options	:	QOP_E LDquot qop_value qop_options_h RDquot
 		;
 
@@ -1460,12 +1460,12 @@ qop_options_h	:	/* empty */
 		|	qop_options_h ',' qop_value
 		; /* aBNF: *("," qop-value) */
 
-qop_value	:	token 
+qop_value	:	token
 		; /* aBNF: "auth" | "auth_int" | token */
 
 Proxy_Authorization:	PROXY_AUTHORIZATION_HC credentials
 		;
-		
+
 Proxy_Require	:	PROXY_REQUIRE_HC option_tag comma_option_tag_star
 		;
 
@@ -1478,54 +1478,54 @@ comma_option_tag_star:	/* empty */
 
 Record_Route	:	RECORD_ROUTE_HC rec_route Record_Route_h
 		;
-		
+
 Record_Route_h	:	/* empty */
 		|	Record_Route_h Comma rec_route
 		; /* aBNF: *(COMMA rec-route) */
 
 rec_route	:	name_addr semi_rr_param_star
 		;
-		
+
 rr_param	:	generic_param
 		;
 
 semi_rr_param_star:	/* empty */
 		|	semi_rr_param_star Semi rr_param
 		; /* aBNF: *( SEMI rr-param ) */
-		
+
 Reply_To	:	REPLY_TO_HC rplyto_spec
 		;
-		
-rplyto_spec	:	name_addr rplyto_spec_h	
-		|	addr_spec rplyto_spec_h	
+
+rplyto_spec	:	name_addr rplyto_spec_h
+		|	addr_spec rplyto_spec_h
 		;
-		
+
 rplyto_spec_h	:	/* empty */
 		|	rplyto_spec_h Semi rplyto_param
 		; /* aBNF: *( SEMI rplyto-param ) */
-		
+
 rplyto_param	:	generic_param
 		;
-		
+
 Require		:	REQUIRE_HC option_tag comma_option_tag_star
 		;
 
 Retry_After	:	RETRY_AFTER_HC delta_seconds Retry_After_h
 		|	RETRY_AFTER_HC delta_seconds comment Retry_After_h
 		;
-		
+
 Retry_After_h	:	/* empty */
-		|	Retry_After_h Semi retry_param 
+		|	Retry_After_h Semi retry_param
 		; /* aBNF: *( SEMI retry-param ) */
-		
+
 retry_param	:	DURATION_E delta_seconds
 		|	generic_param
 		;
-		
+
 Route		:	ROUTE_HC route_param
 		|	ROUTE_HC route_param Route_h
 		;
-		
+
 Route_h		:	Comma route_param
 		|	Route_h Comma route_param
 		; /* aBNF: 1*(COMMA route-param) */
@@ -1542,26 +1542,26 @@ server_val	:	product
 		|	comment_sv
 		|	Lws comment_sv
 		;
-		
+
 lws_server_val_star:	/* empty */
 		|	Lws product lws_server_val_star
 		|	Lws comment_sv lws_server_val_star
 		|	Lws Lws comment_sv lws_server_val_star
 		; /* aBNF: *(LWS server-val)*/
-	
+
 /* modified version of rule comment to prevent Lws-catching in rule Server, ? */
 comment_sv	:	LPAREN_SV { SWITCHSTATE_COMMENT2; } comment_sv_hh RPAREN_C2 { SWITCHSTATE_SRVRVAL; }
 		;
-		
+
 comment_sv_h	:	Lparen comment_sv_hh RPAREN_C2
 		| 	Lparen comment_sv_hh RPAREN_C2 Lws
 		;
-		
+
 comment_sv_hh	:	/* empty */
 		|	comment_sv_hh ctext
 		|	comment_sv_hh QUOTED_PAIR
 		|	comment_sv_hh comment_sv_h
-		;		
+		;
 
 product		:	token
 		|	token Slash product_version
@@ -1569,7 +1569,7 @@ product		:	token
 
 product_version	:	token
 		;
-		
+
 Subject		:	SUBJECT_HC { SWITCHSTATE_UTF8CH; } Subject_h { SWITCHSTATE_NORMAL; }
 		;
 
@@ -1580,7 +1580,7 @@ Subject_h	:	/* empty */
 Supported	:	SUPPORTED_HC
 		|	SUPPORTED_HC option_tag comma_option_tag_star
 		;
-		
+
 
 Timestamp	:	TIMESTAMP_HC number
 		|	TIMESTAMP_HC number '.'
@@ -1597,7 +1597,7 @@ delay		:	/* empty */
 		|	number '.'
 		|	number '.' number
 		; /* aBNF: delay = *(DIGIT) [ "." *(DIGIT) ] */
-		
+
 
 /* to do -> original-regel fuer to auskommentiert und durch extension-header-regel ersetzt,
    da amibiguity-error momentan noch nicht geloest
@@ -1636,20 +1636,20 @@ To_h		:	// empty
 to_param	:	generic_param // includes tag_param
 		;
 
-				
+
 Unsupported	:	UNSUPPORTED_HC option_tag comma_option_tag_star
 		;
-		
+
 User_Agent	:	USER_AGENT_HC { SWITCHSTATE_SRVRVAL; } server_val lws_server_val_star
 		;
-		 
+
 Via		:	VIA_HC via_parm
 		|	VIA_HC via_parm Via_h
 		;
-		
+
 Via_h		:	Comma via_parm
 		|	Via_h Comma via_parm
-		; /* aBNF: 1*(COMMA via-parm) */ 
+		; /* aBNF: 1*(COMMA via-parm) */
 
 via_parm	:	sent_protocol Lws sent_by
 		|	sent_protocol Lws sent_by via_parm_h
@@ -1660,73 +1660,73 @@ via_parm_h	:	Semi via_params
 		; /* aBNF: 1*( SEMI via-params ) */
 
 
-via_params	:	via_ttl 
+via_params	:	via_ttl
 		|	via_maddr
 		|	via_received
 		|	via_branch
 		|	via_extension
 		;
-		
+
 via_ttl		:	TTL_E ttl
 		|	TTLE ttl
 		;
-		
+
 via_maddr	:	MADDR_E host
 		|	MADDRE host
 		;
-		
+
 via_received	:	RECEIVED_E IPv4address
 		|	RECEIVED_E IPv6address
 		;
-		
+
 via_branch	:	BRANCH_E token
 		;
-		
+
 via_extension	:	generic_param
 		;
-		
+
 sent_protocol	:	protocol_name Slash protocol_version Slash transport
 		;
 
 protocol_name	:	token /* "SIP" included */
 		;
-		
+
 protocol_version:	token
 		;
 
 transport	:	token
 		; /* aBNF: "UDP" / "TCP" / "TLS" / "SCTP" / other-transport */
-		
+
 sent_by		:	host
 		|	host Colon port
 		;
 
-ttl		:	DIGIT 
-		|	DIGIT DIGIT 
-		| 	DIGIT DIGIT DIGIT	
-		; /* aBNF: ttl = 1*3DIGIT ; 0 to 255 */	
- 
+ttl		:	DIGIT
+		|	DIGIT DIGIT
+		| 	DIGIT DIGIT DIGIT
+		; /* aBNF: ttl = 1*3DIGIT ; 0 to 255 */
+
 Warning		:	WARNING_HC warning_value Warning_h
 		;
-		
+
 Warning_h	:	/* empty */
 		|	Warning_h Comma warning_value
 		; /* aBNF: *(COMMA warning-value) */
-		
+
 warning_value	:	{ SWITCHSTATE_WARNING; } warn_code SP warn_agent SP { SWITCHSTATE_NORMAL; } warn_text
 		;
-		
+
 warn_code	:	DIGIT DIGIT DIGIT
 		; /* aBNF: warn-code = 3DIGIT */
-		
-warn_agent	:	host ':' port | IPv6reference 
+
+warn_agent	:	host ':' port | IPv6reference
 				/* rest of hostport is contained in pseudonym */
 		|	pseudonym
 		;
-                     
+
 warn_text	:	quoted_string
 		;
-		
+
 pseudonym 	:	token
 		;
 
@@ -1735,28 +1735,28 @@ WWW_Authenticate:	WWW_AUTHENTICATE_HC challenge
 
 extension_header:	HEADER_NAME_HC { SWITCHSTATE_UTF8CH; } header_value { SWITCHSTATE_NORMAL; }
 		;
-		
+
 /* header_name	:	token; <-- obsolete */
-		
+
 header_value	:	/* empty */
-		|	header_value text_utf8char 
+		|	header_value text_utf8char
 		|	header_value UTF8_CONT
 		|	header_value Lws
 		|	header_value SEMI  /* cause of tokenizing it in utf8CH-state */
 		|	header_value COMMA /* s. a. */
 		; /* aBNF: *(TEXT-UTF8char / UTF8-CONT / LWS) */
-		
+
 /* message_body -> obsolete */
 
 number		:	DIGIT
 		|	number DIGIT
 		;
-		
+
 %%
 
 /* ***************************** errorhandling-procedures ******************** */
 
-/* Handles syntaxerrors 
+/* Handles syntaxerrors
  *
  * Logs position of syntaxerror and bad token into a buffer
  * Resynchs parsing-position to next line.
@@ -1773,13 +1773,13 @@ number		:	DIGIT
 int yyerror (char *s) {
 	int token,len;
 	char* errtoktext;
-	
+
 	/* write error-message into buffer */
 	  if (synerrbuf_left-100<1) {
 		fprintf(stderr,"internal syntax-error-buffer is full\n");
 	  } else {
 	  	errtoktext=yytext;
-	  	
+
 	  	// translate some chars into a more readable form
 	  	  switch (*yytext) {
 	  	  case '\t': errtoktext="TAB";
@@ -1789,20 +1789,20 @@ int yyerror (char *s) {
 		  case '\n': errtoktext="LF";
 		  	     break;
 		  case ' ' : errtoktext="SPACE";
-			     break;	 
+			     break;
 	  	  };
-	  	  
+
 		len=snprintf(errbufp,100,"Syntaxerror at (or before) %d.%d-%d.%d [%s]\n",
 			yylloc.first_line,yylloc.first_column,yylloc.last_line,
 			yylloc.last_column,errtoktext);
 		errbufp+=len;
 		synerrbuf_left-=len;
 	  };
-	
+
 	/* resynch to next LF or EOB */
 	  do {
 		token=yylex();
-	  } while (token!=LF && token!=EOB); 	
+	  } while (token!=LF && token!=EOB);
 
 	/* increase errornumber */
 	  numSynErrs++;
@@ -1831,7 +1831,7 @@ void logerrmsg(char* errmsg) {
 			yylloc.last_column,yytext,errmsg);
 		errbufp+=len;
 		synerrbuf_left-=len;
-		
+
 		/* increase errornumber */
 	  	  numSynErrs++;
 	  };
@@ -1846,7 +1846,7 @@ void LogBadContentLength() {
 	  	 len=snprintf(errbufp,100,"Content-Length given in SIP-Message-Header is invalid\n");
 		 errbufp+=len;
 		 synerrbuf_left-=len;
-		 
+
 		 /* increase errornumber */
 		   numSynErrs++;
 	  };
@@ -1863,7 +1863,7 @@ void resetSynerrbuf() {
 
 void CheckContentLength(char* sipp,int siplen) {
 	int cl,i;
-			 
+
 	if (cl_set) {
 	  // look for pos. where content starts (2 following CRLF's)
 		for (i=0;i+3<siplen;i++) {
@@ -1871,9 +1871,9 @@ void CheckContentLength(char* sipp,int siplen) {
 				if (sipp[i+2]=='\r' && sipp[i+3]=='\n') {
 					cl=i+4;
 					if ((siplen-cl)!=cl_parsed) LogBadContentLength();
-					break;	
+					break;
 				};
-				i=i+2; 
+				i=i+2;
 			};
 		};
 	};
@@ -1890,7 +1890,7 @@ void CheckContentLength(char* sipp,int siplen) {
  *
  * @return 0	no hexdig
  * @return 1	is hexdig
-**/ 
+**/
 int isHexdig() {
 	int ishexdig=0;
 	if (yytext[0]>=97 && yytext[0]<=102) ishexdig=1;
@@ -1905,7 +1905,7 @@ int isHexdig() {
  *
  * @return 0	no lhexdig
  * @return 1	is lhexdig
-**/ 
+**/
 int isLHexdig() {
 	if (yytext[0]>=97 && yytext[0]<=102) return 1;
 	return 0;
@@ -1918,8 +1918,8 @@ void initParsing() {
 	yylineno=1;
         yylloc.first_line = yylloc.last_line = 1;
         yylloc.first_column = yylloc.last_column = 1;
-	SWITCHSTATE_NORMAL; 
-	EOM=0; 
+	SWITCHSTATE_NORMAL;
+	EOM=0;
 	resetSynerrbuf();
 };
 
